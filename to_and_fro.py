@@ -1,7 +1,7 @@
 #/usr/bin/python
 # -*- coding: utf-8 -*-
 """
-Created on Mon Sep 28 17:59:40 2015 in answer to the question on Lined-in:
+Created on Mon Sep 28 17:59:40 2015 in answer to the question on Linked-in:
 LIST REORDER
 
 HI GUYES

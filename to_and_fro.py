@@ -17,12 +17,14 @@ def to_and_fro(ss):
     'sort' a sequence (e.g. a list) of strings by taking 1st, then last,
     then 2nd, then last-but-one and so on.
     """
-    ss = ss[:]  # make sure we have a list; don't change callers's list.
-    ss_new = []
+    ss = list(ss)  # make sure we have a list; don't change caller's original.
+    ss_new = [] # start our answer as an empty list
     while ss:   # i.e. until there's no more left to take
-        ss_new.append(ss.pop(0))
+        ss_new.append(ss.pop(0)) # take one from start:
         if ss:
-            ss_new.append(ss.pop(-1))
+            # at least one left so now take one from end:
+            ss_new.append(ss.pop())
+            # or more explicit but equivalent: ss_new.append(ss.pop(-1))
     return ss_new
     
 # Above this line is the actual function.
@@ -31,12 +33,12 @@ if __name__ == '__main__':
     for list_size, reason in ((0, 'empty'),
                               (4, 'even-sized'),
                               (7, 'odd-sized')):
-        orig_list = ["    case '%s' string #%d" %(reason, i+1)
+        orig_seq = ["    case '%s' string #%d" %(reason, i+1)
                         for i in xrange(list_size)]
-        sorted_list = to_and_fro(orig_list)
+        sorted_seq = to_and_fro(orig_seq)
         print ("\n\ncase %s" % reason)
-        for (which, when) in ((orig_list, "before"),
-                              (sorted_list, "after")):
+        for (which, when) in ((orig_seq, "before"),
+                              (sorted_seq, "after")):
             print ("\n  %s" % when)
             print ("\n".join(which))
 

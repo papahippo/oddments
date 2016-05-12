@@ -7,6 +7,8 @@ Warnings:
      1. I added the sys.argc stuff just before posting on github without re-testing!
      2. The style does not conform to python commuity consensus of 'best practice'; e.g. %s stuff is old-fashioned.
      3. i used  '.bmp' file by accident (I was borrrowing my son's scanner because it supports letter format better).
+     4. I had the same problem with lettr stuff scanned as PDFs; the solution for this is ratehr different, but I
+        crammed it into this single source file!
 """
 
 import sys,os
@@ -15,15 +17,29 @@ from os import listdir
 from os.path import isfile, join
 
 print("running '%s' to convert scanned images from 'letter' without margin to A4 with margin" % sys.argv.pop(0))
-mypath = (sys.argv and sys.argv.pop(0)) or '/home/gill/MEW Archive/Lord of the dance/ScannedAtColins/'
+mypath = (sys.argv and sys.argv.pop(0)) or '/home/gill/MEW_Archive/H/Highlights_from_Gladiator_too_big/'
 onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
-myext = '.bmp'
+myexts = '.bmp', '.ppm', '.pdf'
+dest_prefix = 'a4/'
+
+if '/' in dest_prefix:
+    try:
+        os.mkdir(mypath + dest_prefix)
+    except FileExistsError:
+        pass
 for f in onlyfiles:
     base, ext = os.path.splitext(f)
-    if ext != myext:
-        print("skippping bacause extension not '%s': %s" %(myext, f))
+    if ext not in myexts:
+        print("skippping bacause extension not in %s: %s" %(myexts, f))
         continue
-    img = Image.open(mypath+f, "r")
+    old_filename = mypath + f
+    new_filename = mypath + dest_prefix + f + '.pdf'
+    if ext == '.pdf':
+        cmd = "pdfjam --outfile %s  --paper a4paper --scale 0.9 %s" %(new_filename, old_filename)
+        print("converting this %s files with a one-liner: '%s'" %(myexts, cmd))
+        os.system(cmd)
+        continue
+    img = Image.open(old_filename, "r")
     w, h =img.size
     full_a4_w = int((w * 210)/ (8.5 * 25.4))
     full_a4_h = int((w * 297)/ (11.0 * 25.4))
@@ -35,6 +51,5 @@ for f in onlyfiles:
     bordered_img = ImageOps.expand(essential_image, border=margin, fill=(255, 255, 255))
     print(f, "scanned area =", (w, h ),"  ok_area =", (img_w, img_h),
           "total size =", bordered_img.size)
-    new_filename = 'a4_' + f + '.jpeg'
     print("saving to... ", new_filename)
     bordered_img.save(new_filename)

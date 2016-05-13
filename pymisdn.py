@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 """
-WARNING: temporarily(?) dicontinuing the ctypes approach; se 'pymisdn.py'.
 I'm incubating my python isdn monitor stuff here.. I'll move it toits own project if it reallly gets going!
 """
 import sys, os, socket, fcntl, array, ctypes

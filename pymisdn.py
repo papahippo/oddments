@@ -2,73 +2,55 @@
 """
 I'm incubating my python isdn monitor stuff here.. I'll move it toits own project if it reallly gets going!
 """
-import sys, os, socket, fcntl, array, ctypes
+import sys, os, socket, fcntl, struct, array
 
-class Socket2me(socket.socket)
-    tag = 'i'
-    def ioctl_get_unpacked(self, funcNum):
-class EasyStructure(ctypes.LittleEndianStructure):
-    def __str__(self):
-        return '\n'.join(
-            ["\t%s = %s" %(_f[0], getattr(self, _f[0]))
-             for _f in self._fields_]
-        )
+class ISocket(socket.socket):
+    tag = 'I'
 
-class ABI_version(EasyStructure):
-    """
-    """
-    _pack_ = 1
-    _fields_ = [
-        ("major_version",       ctypes.c_uint32,  8),
-        ("minor_version",       ctypes.c_uint32,  8),
-        ("release",             ctypes.c_uint32, 14),
-        ("_spare_1",            ctypes.c_uint32,  1),
-        ("is_git.misdn.eu_ver", ctypes.c_uint32,  1),
-    ]
 
-class DeviceInfo(EasyStructure):
-    """
-    """
-    _pack_ = 1
-    _fields_ = [
-        ("id",                  ctypes.c_uint32),
-        ("D_protocols",         ctypes.c_uint32),
-        ("B_Protocols",         ctypes.c_uint32),
-        ("protocol",            ctypes.c_uint32),
-        ("channelMap",          ctypes.c_uint8*16),
-        ("nB_chans",            ctypes.c_uint32),
-        ("name",                ctypes.c_uint8*20),
-    ]
-socket.PF_ISDN = 34
-IMGETVERSION = 0x80044942
-IMGETCOUNT   = 0x80044943
-IMGETDEVINFO = 0x80044944
+    def __init__(self, family=34, type=socket.SOCK_RAW, proto=0, fileno=None):
+        socket.socket.__init__(self, family, type, proto, fileno)
 
-print("running '%s' to monitor ISDN activity" % sys.argv.pop(0))
-#print(socket.PF_ISDN, socket.SOCK_RAW, socket.PF_RDS)
-mySocket = socket.socket(socket.PF_ISDN, socket.SOCK_RAW, 0)
-#print (dir(socket))
-print (mySocket)
+    def ioctl(self, funcNum, fmt, *values):
+        size = struct.calcsize(fmt)
+        funcCode = funcNum + (ord(self.tag)<<8) + (4<<16) + 0x80000000;
+        buf = bytearray(size)
+        if values:
+            struct.pack_into(fmt, buf, 0, *values)
+        print (type(buf), buf)
+        print ("size =", size, "funcCode=", hex(funcCode))
+        rc = fcntl.ioctl(self, funcCode, buf)
+        if rc:
+            raise IOError("can't get mISDN version")
+        # print (buf)
+        return struct.unpack(fmt, buf)
 
-pISDN_version = ABI_version(1, 1, 291)
-mISDN_version = ABI_version()
-deviceInfo = DeviceInfo()
+    def get_mISDN_Version(self):
+        return self.ioctl(66, 'BBH')
 
-rc = (fcntl.ioctl(mySocket, IMGETVERSION, mISDN_version))
-print ('\npISDN_version\n', pISDN_version)
-print ('\nmISDN_version\n', mISDN_version)
+    def get_device_count(self):
+        return self.ioctl(67, 'L')
 
-count_ = ctypes.c_uint32(0)
-#count_ = Count_only(0)
-rc = fcntl.ioctl(mySocket, IMGETCOUNT, count_)
-count = count_.value
-print ("%s controller(s) found" % count)
-for ic in range(count):
-    print ("controller #%s" % ic)
-    rc = fcntl.ioctl(mySocket, IMGETDEVINFO, deviceInfo)
-    print (deviceInfo)
-#    print ("values", str(deviceInfo.name), str(deviceInfo.channelMap))
-    print('channel map =', ''.join(reversed(['%s' % i8 for i8 in deviceInfo.channelMap])))
-    print('name =', ''.join([ chr(i8) for i8 in deviceInfo.name]))
-while (1):
-    break
+    def get_device_info(self, device_index):
+        return self.ioctl(68, 'LLLL16sL20s', device_index, 0, 0, 0,
+                          0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,  0,
+                          0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, )
+
+def main():
+    iSocket = ISocket()
+    # print(iSocket)
+    version = iSocket.get_mISDN_Version()
+    print("version (Major.minor.release) = %s.%s.%s" % version)
+    device_count, = iSocket.get_device_count()
+    print("device count =", device_count)
+
+    for device_index in range(device_count):
+        print ("device_index %s" % device_index)
+        device_info = iSocket.get_device_info(device_index)
+        print (device_info)
+
+    mySocket.close()
+
+if __name__ == "__main__":
+    main()
+

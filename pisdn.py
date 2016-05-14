@@ -5,20 +5,28 @@ I'm incubating my python isdn monitor stuff here.. I'll move it toits own projec
 """
 import sys, os, socket, fcntl, array, ctypes
 
-class Socket2me(socket.socket)
-    tag = 'i'
-    def ioctl_get_unpacked(self, funcNum):
-class EasyStructure(ctypes.LittleEndianStructure):
+sa_family_t = ctypes.c_ushort;
+
+class IsdnStructure(ctypes.LittleEndianStructure):
+    _pack_ = 1
     def __str__(self):
         return '\n'.join(
             ["\t%s = %s" %(_f[0], getattr(self, _f[0]))
              for _f in self._fields_]
         )
 
-class ABI_version(EasyStructure):
+class SockAddr_mISDN(IsdnStructure):
+    _fields_ = [
+        ("family",       sa_family_t),
+        ("dev",          ctypes.c_ubyte),
+        ("channel",      ctypes.c_ubyte),
+        ("sapi",         ctypes.c_ubyte),
+        ("tei",          ctypes.c_ubyte),
+    ]
+
+class ABI_version(IsdnStructure):
     """
     """
-    _pack_ = 1
     _fields_ = [
         ("major_version",       ctypes.c_uint32,  8),
         ("minor_version",       ctypes.c_uint32,  8),
@@ -27,23 +35,30 @@ class ABI_version(EasyStructure):
         ("is_git.misdn.eu_ver", ctypes.c_uint32,  1),
     ]
 
-class DeviceInfo(EasyStructure):
+class ChannelMap(ctypes.c_ubyte*16):
+    def __str__(self):
+        return '0x'+ ''.join(reversed(['%02x' % i8 for i8 in self]))
+
+
+class DeviceInfo(IsdnStructure):
     """
     """
-    _pack_ = 1
     _fields_ = [
         ("id",                  ctypes.c_uint32),
         ("D_protocols",         ctypes.c_uint32),
         ("B_Protocols",         ctypes.c_uint32),
         ("protocol",            ctypes.c_uint32),
-        ("channelMap",          ctypes.c_uint8*16),
+        ("channelMap",          ChannelMap),
         ("nB_chans",            ctypes.c_uint32),
-        ("name",                ctypes.c_uint8*20),
+        ("name",                ctypes.c_char*20),
     ]
+    
 socket.PF_ISDN = 34
 IMGETVERSION = 0x80044942
 IMGETCOUNT   = 0x80044943
 IMGETDEVINFO = 0x80044944
+
+dch_echo = True
 
 print("running '%s' to monitor ISDN activity" % sys.argv.pop(0))
 #print(socket.PF_ISDN, socket.SOCK_RAW, socket.PF_RDS)
@@ -68,8 +83,15 @@ for ic in range(count):
     print ("controller #%s" % ic)
     rc = fcntl.ioctl(mySocket, IMGETDEVINFO, deviceInfo)
     print (deviceInfo)
-#    print ("values", str(deviceInfo.name), str(deviceInfo.channelMap))
-    print('channel map =', ''.join(reversed(['%s' % i8 for i8 in deviceInfo.channelMap])))
-    print('name =', ''.join([ chr(i8) for i8 in deviceInfo.name]))
+
+mySocket.close()
+
+mySocket = socket.socket(socket.PF_ISDN, socket.SOCK_DGRAM, deviceInfo.protocol)
+
+sockAddr_mISDN = SockAddr_mISDN()
+
+# try to bind on D/E channel first, fallback to D channel on error
+for channel in reversed(list(range(dch_echo+1))):  # (1,0) or just (0,)
+    pass
 while (1):
     break

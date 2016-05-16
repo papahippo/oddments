@@ -1,13 +1,16 @@
 #!/usr/bin/python3
 """
 I'm incubating my python isdn monitor stuff here.. I'll move it toits own project if it reallly gets going!
+This project is stalled because of problems binding tosocket of family AF_ISDN. The python scoket library
+only seems to like AF_INET and AF_INET6.
 """
 import sys, os, socket, fcntl, struct, array
 
 # def composeFuncCode(fucNum, )
 # ... on hold; currently using magic 32-bit constants!
 
-PF_ISDN = AF_ISDN = 34
+PF_ISDN = 34
+AF_ISDN = 26
 
 class ISocket(socket.socket):
     tag = 'I'
@@ -57,13 +60,15 @@ def main():
     iSocket.close()
 
     iSocket = ISocket(PF_ISDN, socket.SOCK_DGRAM, protocol)
+    iSocket = ISocket(PF_ISDN, socket.SOCK_DGRAM, protocol)
 
     dch_echo = 0  # can be set to 1 by arg in loghex.c from which this is largely cribbed!
     card_no = 0 # ditto
     # try to bind on D/E channel first, fallback to D channel on error
     #
     for channel in reversed(list(range(dch_echo+1))):  # (1,0) or just (0,)
-        print(iSocket.bind((AF_ISDN, card_no)))
+#        print(iSocket.bind((AF_ISDN, card_no)))
+        print(iSocket.bind((socket.AF_INET, 0)))
         break
 
 

@@ -2,6 +2,8 @@
 """
 WARNING: temporarily(?) dicontinuing the ctypes approach; se 'pymisdn.py'.
 I'm incubating my python isdn monitor stuff here.. I'll move it toits own project if it reallly gets going!
+This project is stalled because of problems binding tosocket of family AF_ISDN. The python scoket library
+only seems to like AF_INET and AF_INET6.
 """
 import sys, os, socket, fcntl, array, ctypes
 

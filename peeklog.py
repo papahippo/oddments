@@ -25,7 +25,7 @@ class EyeSDNFile:
     def read_packet(self):
         while 1:
             i = self.carry_bytes.find(0xff)
-            print ("index of 0xff =", i)
+            # print ("index of 0xff =", i)
             if i >= 0:
                 packet = self.carry_bytes[:i]
                 self.carry_bytes = self.carry_bytes[i+1:]
@@ -46,45 +46,21 @@ class EyeSDNFile:
     def get_packet_parts(self):
         packet = self.read_packet()
         head = bytes([0]) + packet[:12]  # prefix null byte to facilitate unpacking
-        body = packet[12:]
-        print([hex(b) for b in head] + [' ---'] + [hex(b) for b in body])
         usecs, secs, origin, length = struct.unpack('>LxLxbH', head)
+        local_time_then = time.localtime(secs)
+        body = packet[12:]
+        print(time.strftime('%Y-%b-%d %H:%M:%S.', local_time_then) + ('%06u' % usecs))
+        print([hex(b) for b in head] + [' ---'] + [hex(b) for b in body])
         if length != len(body):
             raise ValueError('actual length %s != advertized lengh %s'
                              %(len(body), length))
-        return time.localtime(secs), usecs, body
+        return local_time_then, usecs, body
 
 def main():
     prog = sys.argv.pop(0)
     log =  EyeSDNFile(sys.argv and sys.argv.pop() or 'isdnws.log', 'rb')
     while 1:
-        if 0:
-            packet = log.read_packet()
-            if not packet:
-                sys.exit(0)
         local_time_then, usecs, body = log.get_packet_parts()
-        print(len(body))
+
 if __name__ == '__main__':
     main()
-
-
-if 0:
-    with EyeSDNFile(fileName, 'rb') as f:
-        if f.read(6) != tell_tale_bytes:
-            raise ValueError("log doesn't start with '%s'" % tell_tale_bytes)
-
-        while 1:
-            header = f.read(13)
-            if header:
-                print(len(header), "bytes read")
-                if header[0] != 0xff:
-                    raise ValueError("header doesn't start with 0xff")
-                header = bytes([0]) + header [1:]
-                usecs, secs, origin, length = struct.unpack('>LxLxbH', header)
-                print(usecs, secs, origin, length)
-                local_time_then = time.localtime(secs)
-                print(time.strftime('%Y-%b-%d %H:%M:%S.', local_time_then) + ('%06u' % usecs))
-                packet = f.read(length)
-                print([hex(b) for b in header] + [' ---']+[hex(b) for b in packet])
-                continue
-            time.sleep(0.2)

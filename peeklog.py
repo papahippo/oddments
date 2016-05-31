@@ -3,7 +3,7 @@
 quicky (?I hope) to read a log file as it is being written.
 """
 import sys, os, time, struct
-import sendmail
+from sendmail import sendMail
 # from PySide import QtCore, QtGui
 
 class EyeSDNFile:
@@ -28,9 +28,12 @@ class EyeSDNFile:
         iEnd = iStart+9
         called = "(0)" + body[iStart:iEnd].decode()
         #called = body[iEnd+3:iEnd + 2 + body[iEnd + 1]] # '(0)' + body[32:41].decode()
-        print("on", self.s_time_then, caller, "is calling", called)
+        subject = "on " + self.s_time_then + ", " + caller + " called " + called
+        print(subject)
         if self.dither_count:
             print("must send mail!")
+            sendMail(recipients = ['hippos@chello.nl', 'g.m.myerscough@gmail.com'],
+                     subject=subject)
         else:
             print("old cow - no need to send mail.")
 
@@ -85,7 +88,7 @@ class EyeSDNFile:
         usecs, secs, origin, length = struct.unpack('>LxLxbH', head)
         local_time_then = time.localtime(secs)
         body = packet[12:]
-        self.s_time_then = time.strftime('%Y-%b-%d %H:%M:%S.', local_time_then)
+        self.s_time_then = time.strftime('%A %Y-%b-%d %H:%M:%S', local_time_then)
         #print(self.s_time_then + ('%06u' % usecs), end=' ')
         #print([hex(b) for b in head] + [' ---'] + [hex(b) for b in body], end=' ')
         if length != len(body):

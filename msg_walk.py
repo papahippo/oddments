@@ -6,7 +6,15 @@ commercial project so no context details!
 import sys, os
 def main():
     prog = sys.argv.pop(0)
-    tWalk = 570
+    tWalk = 575.5
+    for i in range(100):
+        tBig = i*tWalk
+        tRel = tBig % 20.
+        if  8. < tRel < 10.:
+            print ("iteration", i, "after", tBig/1000., "seconds", tRel)
+
+
+    return
     # iSince = number of ticks passed since bank switch
     for iSince in range(30):
         # we want to have written a complete mesage sector before the FPGA starts sending it.

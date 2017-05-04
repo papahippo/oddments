@@ -35,7 +35,8 @@ for f in onlyfiles:
     old_filename = mypath + f
     new_filename = mypath + dest_prefix + f + '.pdf'
     if ext == '.pdf':
-        cmd = "pdfjam --outfile %s  --paper a4paper --scale 0.9 %s" %(new_filename, old_filename)
+        # cmd = "pdfjam --outfile %s  --paper a4paper --scale 0.9 %s" %(new_filename, old_filename)
+        cmd = "cpdf %s -scale-contents 0.9  -o %s" %(old_filename, new_filename)
         print("converting this %s files with a one-liner: '%s'" %(myexts, cmd))
         os.system(cmd)
         continue

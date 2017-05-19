@@ -14,38 +14,28 @@ except ImportError:
     X11 = False
 
 
-class Widgelet:
-    """
-    A 'widgelet' is defined (by me!) as a component which can be added to a widget and has less autonomy than an
-    actual widget.
-    """
-    def __init__(self, x=0, y=0, tag='?'):
-        self.__x = x
-        self.__y = y
-        self.__tag = tag
-
-    def paint(self, painter,):
-        painter.translate(self.__x, self.__y)
-        self.putShape(painter)
-        self.putTag(painter)
-        painter.translate(-self.__x, -self.__y)
-
-    def putShape(self, painter):
-        pass
-
-    def putTag(self, painter):
-        pass
-
-
-class Bookmark(Widgelet):
+class Bookmark(QWidget):
 
     WIDTH = 12.0
     HEIGHT = 10.0
 
+    def __init__(self, parent=None, x=0, y=0):
+        QWidget.__init__(self, parent=parent)
+        self.move(x, y)
+        self.setFixedWidth(self.WIDTH)
+        self.setFixedHeight(self.HEIGHT)
+        self.show()
+
+    def paintEvent(self, event=None):
+        painter = QPainter(self)
+        self.putShape(painter)
+        self.putTag(painter)
+
+
     def putShape(self, painter):
-        triangle = [QPointF(-self.WIDTH/2, 0),
-                    QPointF(self.WIDTH/2, 0),
-                    QPointF(0, self.HEIGHT)]
+        triangle = [QPointF(0, 0),
+                    QPointF(self.WIDTH, 0.),
+                    QPointF(self.WIDTH/2, self.HEIGHT)]
         painter.setPen(Qt.yellow)
         painter.setBrush(Qt.darkYellow)
         painter.drawPolygon(QPolygonF(triangle))
@@ -70,7 +60,7 @@ class BookmarkedSlider(QWidget):
         self.setFocusPolicy(Qt.WheelFocus)
         self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,
                                        QSizePolicy.Fixed))
-        self.bookmarks = [Bookmark(54., 0., 'test')]
+        self.bookmarks = [Bookmark(self, 52), Bookmark(self, 252)]
 
     def span(self):
         return self.width() - (self.XMARGIN * 2)
@@ -180,8 +170,6 @@ class BookmarkedSlider(QWidget):
         painter.setPen(Qt.yellow)
         painter.setBrush(Qt.darkYellow)
         painter.drawRect(x, yOffset, self.xFromValue(value), fm.height())
-        for bookmark in self.bookmarks:
-            bookmark.paint(painter)
 
 
 if __name__ == "__main__":

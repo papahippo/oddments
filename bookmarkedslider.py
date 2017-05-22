@@ -21,10 +21,6 @@ class Bookmark(QWidget):
 
     def __init__(self, parent=None, x=0, y=0):
         QWidget.__init__(self, parent=parent)
-        if 0:
-            self.move(x, y)
-            self.setFixedWidth(self.WIDTH)
-            self.setFixedHeight(self.HEIGHT)
         self.setGeometry(x, y, self.WIDTH, self.HEIGHT)
         self.show()
 
@@ -38,9 +34,28 @@ class Bookmark(QWidget):
         triangle = [QPointF(0, 0),
                     QPointF(self.WIDTH, 0.),
                     QPointF(self.WIDTH/2, self.HEIGHT)]
-        painter.setPen(Qt.yellow)
-        painter.setBrush(Qt.darkYellow)
+        painter.setPen(Qt.blue)
+        painter.setBrush(Qt.blue)
         painter.drawPolygon(QPolygonF(triangle))
+
+
+    def putTag(self, painter):
+        pass  # for now!
+
+
+    def mousePressEvent(self, event):
+        print('mousePressEvent', self.__class__.__name__, event.x(), self.x())
+
+
+class TimeMark(Bookmark):
+
+    WIDTH = 12.0
+    HEIGHT = 10.0
+
+    def putShape(self, painter):
+        painter.setPen(Qt.red)
+        painter.setBrush(Qt.red)
+        painter.drawRect(0., 0., self.WIDTH, self.HEIGHT)
 
 
     def putTag(self, painter):
@@ -62,7 +77,7 @@ class BookmarkedSlider(QWidget):
         self.setFocusPolicy(Qt.WheelFocus)
         self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,
                                        QSizePolicy.Fixed))
-        self.bookmarks = [Bookmark(self, 52), Bookmark(self, 252)]
+        self.bookmarks = [TimeMark(self,12), Bookmark(self, 52), Bookmark(self, 252)]
 
     def span(self):
         return self.width() - (self.XMARGIN * 2)
@@ -97,6 +112,7 @@ class BookmarkedSlider(QWidget):
         self.updateGeometry()
 
     def mousePressEvent(self, event):
+        print ('mousePressEvent', self.__class__.__name__, event.x())
         if event.button() == Qt.LeftButton:
             self.moveSlider(event.x())
             event.accept()
@@ -170,7 +186,7 @@ class BookmarkedSlider(QWidget):
         x = BookmarkedSlider.XMARGIN
         yOffset = 0 #  segHeight #  + fm.height()
         painter.setPen(Qt.yellow)
-        painter.setBrush(Qt.darkYellow)
+        painter.setBrush(Qt.yellow)
         painter.drawRect(x, yOffset, self.xFromValue(value), fm.height())
 
 

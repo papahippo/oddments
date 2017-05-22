@@ -21,9 +21,11 @@ class Bookmark(QWidget):
 
     def __init__(self, parent=None, x=0, y=0):
         QWidget.__init__(self, parent=parent)
-        self.move(x, y)
-        self.setFixedWidth(self.WIDTH)
-        self.setFixedHeight(self.HEIGHT)
+        if 0:
+            self.move(x, y)
+            self.setFixedWidth(self.WIDTH)
+            self.setFixedHeight(self.HEIGHT)
+        self.setGeometry(x, y, self.WIDTH, self.HEIGHT)
         self.show()
 
     def paintEvent(self, event=None):

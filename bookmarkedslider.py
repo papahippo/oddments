@@ -14,13 +14,15 @@ except ImportError:
     X11 = False
 
 
-class Bookmark(QWidget):
+class Mark(QWidget):
 
     WIDTH = 12.0
     HEIGHT = 10.0
 
-    def __init__(self, parent=None, x=0, y=0):
+    def __init__(self, parent=None, ix=0, tag='?', x=0, y=0):
         QWidget.__init__(self, parent=parent)
+        self.ix = ix
+        self.tag = tag
         self.setGeometry(x, y, self.WIDTH, self.HEIGHT)
         self.show()
 
@@ -44,10 +46,18 @@ class Bookmark(QWidget):
 
 
     def mousePressEvent(self, event):
-        print('mousePressEvent', self.__class__.__name__, event.x(), self.x())
+        #print('mousePressEvent', self.__class__.__name__, event.x(), self.x())
+        self.parent().mousePressEvent(event, child=self)
 
 
-class TimeMark(Bookmark):
+    def mouseMoveEvent(self, event):
+        #print('mouseMoveEvent', self.__class__.__name__, event.x(), self.x())
+        self.parent().mouseMoveEvent(event, child=self)
+
+class Bookmark(Mark):
+    pass
+
+class TimeMark(Mark):
 
     WIDTH = 12.0
     HEIGHT = 10.0
@@ -61,23 +71,31 @@ class TimeMark(Bookmark):
     def putTag(self, painter):
         pass  # for now!
 
-class BookmarkedSlider(QWidget):
+class MarkedSlider(QWidget):
 
     XMARGIN = 12.0
     YMARGIN = 5.0
     WSTRING = "999"
 
-    valueChanged = pyqtSignal(int)
+    valueChanged = pyqtSignal(int, int)
 
     def __init__(self, lowest=0, highest=100, value=0, parent=None):
-        super(BookmarkedSlider, self).__init__(parent)
+        QWidget.__init__(self, parent=parent)
         self.__lowest = lowest
         self.__highest = highest
-        self.__value = value
         self.setFocusPolicy(Qt.WheelFocus)
         self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,
                                        QSizePolicy.Fixed))
-        self.bookmarks = [TimeMark(self,12), Bookmark(self, 52), Bookmark(self, 252)]
+
+        self.setMarkList([dict(value=0, tag='T', Class=TimeMark)])
+
+    def setMarkList(self, markList):
+        self.markList = markList
+        self.marks = []
+        for ix, dickie in enumerate(markList):
+            Class = dickie.pop('Class', (ix and Bookmark or TimeMark))
+            value = dickie.pop('value', 0)
+            self.marks.append(Class(parent=self, ix=ix, x= self.xFromValue(value), **dickie))
 
     def span(self):
         return self.width() - (self.XMARGIN * 2)
@@ -101,7 +119,7 @@ class BookmarkedSlider(QWidget):
         return QSize(# fm.width(BookmarkedSlider.WSTRING) *
                      # (self.__highest - self.__lowest),
                      480,
-                     (fm.height() * 2) + BookmarkedSlider.YMARGIN)
+                     (fm.height() * 2) + self.YMARGIN)
 
     def setValue(self, value):
         if self.__lowest <= value <= self.__highest:
@@ -111,25 +129,26 @@ class BookmarkedSlider(QWidget):
         self.update()
         self.updateGeometry()
 
-    def mousePressEvent(self, event):
-        print ('mousePressEvent', self.__class__.__name__, event.x())
+    def mousePressEvent(self, event, child=None):
+        # print ('mousePressEvent', self.__class__.__name__, event.x())
         if event.button() == Qt.LeftButton:
-            self.moveSlider(event.x())
+            self.mouseMoveEvent(event, child=child)
             event.accept()
         else:
             QWidget.mousePressEvent(self, event)
 
-    def mouseMoveEvent(self, event):
-        self.moveSlider(event.x())
-
-
-    def moveSlider(self, x):
+    def mouseMoveEvent(self, event, child=None):
+        x = event.x()
+        if child is None:
+            child = self.marks[0]
+        else:
+            x += child.x()
         value = self.valueFromX(x)
-        print(x, value)
-        if value != self.__value:
-            self.__value = value
-            self.valueChanged.emit(self.__value)
-            self.update()
+        print ('mouseMoveEvent', self.__class__.__name__, x, value)
+        child.move(x, child.y())
+        self.markList[child.ix]['value'] = value
+        self.valueChanged.emit(child.ix, value)
+        self.update()
 
 
     def keyPressEvent(self, event):
@@ -162,11 +181,10 @@ class BookmarkedSlider(QWidget):
         font = QFont(self.font())
         font.setPointSize(font.pointSize() - 1)
         fm = QFontMetricsF(font)
-        fracWidth = fm.width(BookmarkedSlider.WSTRING)
+        fracWidth = fm.width(self.WSTRING)
         indent = fm.boundingRect("9").width() / 2.0
         if not X11:
             fracWidth *= 1.5
-        value = self.__value
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setRenderHint(QPainter.TextAntialiasing)
@@ -178,16 +196,18 @@ class BookmarkedSlider(QWidget):
         segLineColor = segColor.dark()
         painter.setPen(segLineColor)
         painter.setBrush(segColor)
-        painter.drawRect(BookmarkedSlider.XMARGIN,
-                         BookmarkedSlider.YMARGIN, self.span(), fm.height())
+        painter.drawRect(self.XMARGIN,
+                         self.YMARGIN, self.span(), fm.height())
         textColor = self.palette().color(QPalette.Text)
         segHeight = fm.height() * 2
-        nRect = fm.boundingRect(BookmarkedSlider.WSTRING)
-        x = BookmarkedSlider.XMARGIN
+        nRect = fm.boundingRect(self.WSTRING)
         yOffset = 0 #  segHeight #  + fm.height()
         painter.setPen(Qt.yellow)
         painter.setBrush(Qt.yellow)
-        painter.drawRect(x, yOffset, self.xFromValue(value), fm.height())
+        #value = self.markList[0]['value']
+        #x = self.xFromValue(value)
+        x = self.marks[0].x()
+        painter.drawRect(self.XMARGIN, yOffset, x, fm.height())
 
 
 if __name__ == "__main__":
@@ -197,16 +217,22 @@ if __name__ == "__main__":
     form = QDialog()
     # form.setMaximumWidth(80)
     sliderLabel = QLabel("&Fraction?")
-    slider = BookmarkedSlider(value=42)
+    slider = MarkedSlider(value=42)
     sliderLabel.setBuddy(slider)
     layout = QGridLayout()
     layout.addWidget(sliderLabel, 0, 0)
     layout.addWidget(slider, 0, 1, 1, 3)
     form.setLayout(layout)
 
-    def valueChanged(value):
-        slider.setValue(value)
+    def myValueChanged(ix, value):
+        print ("value of mark", ix, "changed to", value)
 
+    slider.valueChanged.connect(myValueChanged)
+
+    myMarkList = [dict(Class=TimeMark, tag='t',  value=12),
+                  dict(Class=Bookmark, tag='P',  value=52),
+                  dict(Class=Bookmark, tag='Q',  value=54)]
+    slider.setMarkList(myMarkList)
     form.setWindowTitle("Bookmarked Slider")
     form.show()
     app.exec_()

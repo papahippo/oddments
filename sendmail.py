@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 """
-want someting like this to send mail to my GSM when home isdn line is called
+wanted someting like this to send mail to my GSM when home isdn line is called...
+... I've written off ISDN as obsolescent and am now using this script as a basis for
+an automated sheet music mailer: see musicmailer.py.
 """
 import sys
 import smtplib

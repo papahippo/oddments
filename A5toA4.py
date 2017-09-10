@@ -34,9 +34,9 @@ for f in onlyfiles:
     new_filename = mypath + base + dest_suffix + '.pdf'
     # cmd = "pdfjam --outfile %s  --paper a4paper --scale 0.9 %s" %(new_filename, old_filename)
     # cmd = "cpdf %s -scale-contents 0.9  -o %s" %(old_filename, new_filename)
-    cmd = "pdfposter -p2x1a4 %s %s" %(old_filename, temp_filename)
+    cmd = "pdfposter -p2x1a4 %s %s" %(old_filename, new_filename)
     print("enlarging with one-liner: '%s'" %cmd)
     os.system(cmd)
-    cmd = "pdftk %s cat 1-1 output %s" %(temp_filename, new_filename)
-    print("dropping second page (unwanted) with one-liner: '%s'" %cmd)
-    os.system(cmd)
+    #cmd = "pdftk %s cat 1-1 output %s" %(temp_filename, new_filename)
+    #print("dropping second page (unwanted) with one-liner: '%s'" %cmd)
+    #os.system(cmd)

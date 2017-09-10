@@ -13,14 +13,19 @@ import mimetypes
 from email.message import EmailMessage
 from email.policy import SMTP
 sys.path.insert(0, '')
-from subscribers import *
+import subscribers
 
 
 def main():
+    path_elements = os.getcwd().split(os.sep)
+    possible_title = ''
+    while (len(possible_title) != 1) and path_elements:
+        music_title = possible_title
+        possible_title = path_elements.pop()
     ok_exts = ('.pdf', '.jpg', '.jpeg')
     only_files = [f for f in os.listdir('.') if (os.path.isfile(f)
                                     and os.path.splitext(f)[1].lower() in ok_exts)]
-    for email_addr, instrument_re in sections:
+    for email_addr, instrument_re in subscribers.sections:
         files_to_attach = []
         print ("looking which music to send to '%s' (based on regular expression '%s'..." %(email_addr, instrument_re))
         instrument_cre = re.compile(instrument_re)
@@ -34,22 +39,18 @@ def main():
             continue
         # Create the message
         msg = EmailMessage()
-        path_elements = os.getcwd().split(os.sep)
-        possible_title = ''
-        while (len(possible_title) != 1) and path_elements:
-            music_title = possible_title
-            possible_title = path_elements.pop()
-        print ("music_title=", music_title)
-        msg['Subject'] = title.format(**locals())
+        subject = subscribers.title.format(**locals())
+        print('mail subject will be "%s"' % subject)
+        msg['Subject'] = subject
         msg['To'] = email_addr
         msg['From'] = 'hippos@chello.nl'
         msg.preamble = 'You will not see this in a MIME-aware mail reader.\n'
         file_list = ",\n".join(['  %s' %filename for filename in files_to_attach])
-        msg.set_content(salutation.format(**locals()) + "\n\n"
-            + pre_text +"\n\n"
+        msg.set_content(subscribers.salutation.format(**locals()) + "\n\n"
+            + subscribers.pre_text +"\n\n"
             + file_list + "\n\n"
-            + post_text + "\n\n"
-            + sign_off  + "\n"
+            + subscribers.post_text + "\n\n"
+            + subscribers.sign_off  + "\n"
         )
 
         for filename in files_to_attach:
@@ -67,11 +68,12 @@ def main():
                                    maintype=maintype,
                                    subtype=subtype,
                                    filename=filename)
-        if 'send' in sys.argv:
+        ans = input("send this mail (y/n)?").strip()
+        if ans=='y': # 'send' in sys.argv:
             with smtplib.SMTP('smtp.upcmail.nl') as s:
                 s.send_message(msg)
                 print ("mail has been sent to '%s'." % email_addr)
-    if 'send' not in sys.argv:
+    if 0: # provioanlly removed! 'send' not in sys.argv:
         print ( "^^^^^^^^^\n"
                 "if above text looks all right, send mail by entering command:\n"
                 "music_mailer.py send\n")

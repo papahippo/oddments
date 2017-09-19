@@ -1,16 +1,4 @@
 #!/usr/bin/python3
-"""
-I scanned some music which was in "letter" format with little or no margins. With careful placement of the orignal
-on the scanner I ensured no part of the image was lost... but I need to distribute the music in A4 with margins
- (for filing in ring-binders).
-Warnings:
-     1. I added the sys.argc stuff just before posting on github without re-testing!
-     2. The style does not conform to python commuity consensus of 'best practice'; e.g. %s stuff is old-fashioned.
-     3. i used  '.bmp' file by accident (I was borrrowing my son's scanner because it supports letter format better).
-     4. I had the same problem with lettr stuff scanned as PDFs; the solution for this is ratehr different, but I
-        crammed it into this single source file!
-"""
-
 import sys,os
 from os import listdir
 from os.path import isfile, join

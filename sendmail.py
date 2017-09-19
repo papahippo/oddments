@@ -1,15 +1,10 @@
 #!/usr/bin/python3
-"""
-wanted someting like this to send mail to my GSM when home isdn line is called...
-... I've written off ISDN as obsolescent and am now using this script as a basis for
-an automated sheet music mailer: see musicmailer.py.
-"""
 import sys
 import smtplib
 from email.mime.text import MIMEText
 
 
-def sendMail(sender='gill@luna.myerscough.nl',
+def sendMail(sender='hippos@chello.nl', # 'gill@luna.myerscough.nl',
              recipients=[],
              subject="(no subject supplied to 'sendMail')",
              content="This mail was sent automatically mail sent from a python script ",

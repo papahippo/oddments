@@ -17,6 +17,17 @@ import subscribers
 
 
 def main():
+    recipient_patterns = []
+    script_filename = sys.argv.pop(0)
+    while sys.argv:
+        arg = sys.argv.pop(0)
+        if arg.startswith('-'):
+            fixed_answer = arg[1:].lower()
+            if fixed_answer in ('y', 'yes', 'n', 'no'):
+                continue
+            print("syntax: music_mailer [-y|-n] [pattern...]\n ('%s' is not allowed!)" % fixed_answer)
+            sys.exit(990)
+        recipient_patterns.append(arg)
     path_elements = os.getcwd().split(os.sep)
     possible_title = ''
     while (len(possible_title) != 1) and path_elements:
@@ -25,9 +36,10 @@ def main():
     ok_exts = ('.pdf', '.jpg', '.jpeg')
     only_files = [f for f in os.listdir('.') if (os.path.isfile(f)
                                     and os.path.splitext(f)[1].lower() in ok_exts)]
-    for email_addr, instrument_re in subscribers.sections:
+    for name, email_addr, instrument_re in subscribers.what_goes_to_whom:
         files_to_attach = []
-        print ("looking which music to send to '%s' (based on regular expression '%s'..." %(email_addr, instrument_re))
+        print ("looking which music to send to %s (based on regular expression '%s'..." %(name, instrument_re))
+        first_name = name.split(' ')[0]
         instrument_cre = re.compile(instrument_re)
         for candidate in only_files:
             cl = candidate.lower()
@@ -68,12 +80,12 @@ def main():
                                    maintype=maintype,
                                    subtype=subtype,
                                    filename=filename)
-        ans = input("send this mail (y/n)?").strip()
-        if ans=='y': # 'send' in sys.argv:
+        answer = fixed_answer or input("send this mail (y/n)?").strip()
+        if answer in ('y', 'yes'): # 'send' in sys.argv:
             with smtplib.SMTP('smtp.upcmail.nl') as s:
                 s.send_message(msg)
                 print ("mail has been sent to '%s'." % email_addr)
-    if 0: # provioanlly removed! 'send' not in sys.argv:
+    if 0: # provisioanlly removed! 'send' not in sys.argv:
         print ( "^^^^^^^^^\n"
                 "if above text looks all right, send mail by entering command:\n"
                 "music_mailer.py send\n")

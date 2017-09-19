@@ -5,7 +5,7 @@ wanted someting like this to send mail to my GSM when home isdn line is called..
 an automated sheet music mailer: see musicmailer.py.
 """
 import sys, os, re
-
+from importlib import util
 ## from email.mime.text import MIMEText
 import smtplib
 # For guessing MIME type based on file name extension
@@ -13,12 +13,13 @@ import mimetypes
 from email.message import EmailMessage
 from email.policy import SMTP
 sys.path.insert(0, '')
-import subscribers
+#import subscribers
 
 
 def main():
     recipient_patterns = []
     script_filename = sys.argv.pop(0)
+    subscribers = None
     while sys.argv:
         arg = sys.argv.pop(0)
         if arg.startswith('-'):
@@ -29,16 +30,46 @@ def main():
             sys.exit(990)
         recipient_patterns.append(arg)
     path_elements = os.getcwd().split(os.sep)
-    possible_title = ''
-    while (len(possible_title) != 1) and path_elements:
-        music_title = possible_title
-        possible_title = path_elements.pop()
+    # print (path_elements)
+    music_title = possible_title = ''
+    module_name = 'subscribers'
+    while path_elements:
+        if not subscribers:
+            ancestral_path = os.sep.join(path_elements)
+            print (ancestral_path)
+            spec = util.spec_from_file_location(module_name,
+                                                ancestral_path + os.sep + module_name + '.py')
+            print (spec)
+            if spec:
+                subscribers = util.module_from_spec(spec)
+                if subscribers:
+                    try:
+                        spec.loader.exec_module(subscribers)
+                        print("'%s' taken from directory \"%s\"." % (module_name, ancestral_path))
+                    except FileNotFoundError:
+                        subscribers = None
+        pe = path_elements.pop()
+        if not music_title and len(pe) == 1:
+            music_title = possible_title.replace('_', ' ')
+        possible_title = pe
+        if subscribers:
+            continue
     ok_exts = ('.pdf', '.jpg', '.jpeg')
     only_files = [f for f in os.listdir('.') if (os.path.isfile(f)
                                     and os.path.splitext(f)[1].lower() in ok_exts)]
     for name, email_addr, instrument_re in subscribers.what_goes_to_whom:
+        if recipient_patterns:
+            for rp in recipient_patterns:
+                if re.search(rp, name):
+                    break
+            else:
+                continue
+        if not email_addr:
+            print ("Skipping '%s', for whom we have no email address." % name)
+            continue
         files_to_attach = []
-        print ("looking which music to send to %s (based on regular expression '%s'..." %(name, instrument_re))
+        print ("looking which music to send to %s (based on regular expression '%s'...)"
+                 %(name, instrument_re))
         first_name = name.split(' ')[0]
         instrument_cre = re.compile(instrument_re)
         for candidate in only_files:

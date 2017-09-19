@@ -1,13 +1,10 @@
 #!/usr/bin/python3
-"""
-want someting like this to send mail to my GSM when home isdn line is called
-"""
 import sys
 import smtplib
 from email.mime.text import MIMEText
 
 
-def sendMail(sender='gill@luna.myerscough.nl',
+def sendMail(sender='hippos@chello.nl', # 'gill@luna.myerscough.nl',
              recipients=[],
              subject="(no subject supplied to 'sendMail')",
              content="This mail was sent automatically mail sent from a python script ",

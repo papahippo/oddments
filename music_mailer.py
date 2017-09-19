@@ -19,7 +19,7 @@ sys.path.insert(0, '')
 def main():
     recipient_patterns = []
     script_filename = sys.argv.pop(0)
-    subscribers = None
+    fixed_answer = subscribers = None
     while sys.argv:
         arg = sys.argv.pop(0)
         if arg.startswith('-'):
@@ -36,10 +36,10 @@ def main():
     while path_elements:
         if not subscribers:
             ancestral_path = os.sep.join(path_elements)
-            print (ancestral_path)
+            # print (ancestral_path)
             spec = util.spec_from_file_location(module_name,
                                                 ancestral_path + os.sep + module_name + '.py')
-            print (spec)
+            # print (spec)
             if spec:
                 subscribers = util.module_from_spec(spec)
                 if subscribers:

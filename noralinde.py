@@ -9,8 +9,12 @@ class Play:
 
     def quiz(self):
         random.seed()
+        prev_ix = -1
         while 1:
             ix = random.randrange(len(self.texts))
+            if ix == prev_ix:
+                continue
+            prev_ix = ix
             cue, text = self.texts[ix]
             s = input("(%u.) %s" %(ix, cue))
             if s=='q':

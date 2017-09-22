@@ -103,9 +103,11 @@ def main():
                 h.head | (
                 ),
                 h.body | (
-                    h.p | "Hello",
-                    h.p | "Is this looking some bit like?",
-                    h.img(src="cid:%s" % icon_cid[1:-1]),
+                    h.p | subscribers.salutation.format(**locals()),
+                    h.p | subscribers.pre_text,
+                    h.p | ([(name, h.br) for name in files_to_attach]),
+                    h.p | subscribers.post_text,
+                    h.p | (subscribers.sign_off, h.img(src="cid:%s" % icon_cid[1:-1])),
                 )
             )
         ), subtype='html')

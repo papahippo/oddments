@@ -1,8 +1,7 @@
 #!/usr/bin/python3
 """
-wanted someting like this to send mail to my GSM when home isdn line is called...
-... I've written off ISDN as obsolescent and am now using this script as a basis for
-an automated sheet music mailer: see musicmailer.py.
+a semi- automated sheet music mailer.
+largely based on: https://docs.python.org/3/library/email.examples.html
 """
 import sys, os, re
 from importlib import util
@@ -23,13 +22,16 @@ def main():
         arg = sys.argv.pop(0)
         if arg.startswith('-'):
             fixed_answer = arg[1:].lower()
+            # allow even fixed answer of quit!
             if fixed_answer in ('y', 'yes', 'n', 'no', 'q', 'quit'):
                 continue
             print("syntax: music_mailer [-y|-n] [pattern...]\n ('%s' is not allowed!)" % fixed_answer)
             sys.exit(990)
         recipient_patterns.append(arg)
+    # Potential controversial approach! Look upwards in directory tree for configuration module to import.
+    # Also look for suitable title at same time.
+    #
     path_elements = os.getcwd().split(os.sep)
-    # print (path_elements)
     music_title = possible_title = ''
     module_name = 'subscribers'
     while path_elements:
@@ -49,23 +51,27 @@ def main():
                         subscribers = None
         pe = path_elements.pop()
         if not music_title and len(pe) == 1:
+            # replace underscrores - but not dashes - by spaces.
             music_title = possible_title.replace('_', ' ')
         possible_title = pe
-        if subscribers:
-            continue
+    if not subscribers:
+        print ("cannot find 'subscribers.py' in [grand...][parent] directory. quitting now!")
+        sys.exist(990)
+    # identify all possible attachments once only, before chacking per-user.
+    #
     ok_exts = ('.pdf', '.jpg', '.jpeg')
     only_files = [f for f in os.listdir('.') if (os.path.isfile(f)
                                     and os.path.splitext(f)[1].lower() in ok_exts)]
+    # now look at each potential recipient in turn:
+    #
     for name, email_addr, instrument_re in subscribers.what_goes_to_whom:
+        # honour any recipient pattern argumens which were supplied on teh command line:
         if recipient_patterns:
             for rp in recipient_patterns:
                 if re.search(rp, name):
                     break
             else:
                 continue
-        if not email_addr:
-            print ("Skipping '%s', for whom we have no email address." % name)
-            continue
         files_to_attach = []
         print ("looking which music to send to %s (based on regular expression '%s'...)"
                  %(name, instrument_re))
@@ -77,7 +83,12 @@ def main():
                 print ("  %s" % candidate)
                 files_to_attach.append(candidate)
         if not files_to_attach:
-            print("I found nothing to attach so will not send mail at all to %s" %email_addr)
+            # message below can get in the way, so let's suppress it:
+            # print("I found nothing to attach so will not send mail at all to %s" %email_addr)
+            continue
+        if not email_addr:
+            print ("We have no email address for %s."  % name)
+            print ("perhaps you need to print the above attachments?")
             continue
         # Create the message
         msg = EmailMessage()
@@ -107,7 +118,7 @@ def main():
                     h.p | subscribers.pre_text,
                     h.p | ([(name, h.br) for name in files_to_attach]),
                     h.p | subscribers.post_text,
-                    h.p | (subscribers.sign_off, h.img(src="cid:%s" % icon_cid[1:-1])),
+                    h.p | (h.img(src="cid:%s" % icon_cid[1:-1]), subscribers.sign_off),
                 )
             )
         ), subtype='html')

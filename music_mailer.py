@@ -6,15 +6,14 @@ an automated sheet music mailer: see musicmailer.py.
 """
 import sys, os, re
 from importlib import util
-## from email.mime.text import MIMEText
 import smtplib
 # For guessing MIME type based on file name extension
 import mimetypes
 from email.message import EmailMessage
-from email.policy import SMTP
-sys.path.insert(0, '')
-#import subscribers
+from email.utils import make_msgid
 
+sys.path.insert(0, '')
+from phileas import _html40 as h
 
 def main():
     recipient_patterns = []
@@ -24,7 +23,7 @@ def main():
         arg = sys.argv.pop(0)
         if arg.startswith('-'):
             fixed_answer = arg[1:].lower()
-            if fixed_answer in ('y', 'yes', 'n', 'no'):
+            if fixed_answer in ('y', 'yes', 'n', 'no', 'q', 'quit'):
                 continue
             print("syntax: music_mailer [-y|-n] [pattern...]\n ('%s' is not allowed!)" % fixed_answer)
             sys.exit(990)
@@ -75,7 +74,7 @@ def main():
         for candidate in only_files:
             cl = candidate.lower()
             if instrument_cre.search(candidate.lower()):
-                print ("  %s" %candidate)
+                print ("  %s" % candidate)
                 files_to_attach.append(candidate)
         if not files_to_attach:
             print("I found nothing to attach so will not send mail at all to %s" %email_addr)
@@ -87,7 +86,7 @@ def main():
         msg['Subject'] = subject
         msg['To'] = email_addr
         msg['From'] = 'hippos@chello.nl'
-        msg.preamble = 'You will not see this in a MIME-aware mail reader.\n'
+        # msg.preamble = 'You will not see this in a MIME-aware mail reader.\n'
         file_list = ",\n".join(['  %s' %filename for filename in files_to_attach])
         msg.set_content(subscribers.salutation.format(**locals()) + "\n\n"
             + subscribers.pre_text +"\n\n"
@@ -95,7 +94,27 @@ def main():
             + subscribers.post_text + "\n\n"
             + subscribers.sign_off  + "\n"
         )
+        # Add the html version.  This converts the message into a multipart/alternative
+        # container, with the original text message as the first part and the new html
+        # message as the second part.
+        icon_cid = make_msgid()
+        msg.add_alternative(str(
+            h.html | ("\n",
+                h.head | (
+                ),
+                h.body | (
+                    h.p | "Hello",
+                    h.p | "Is this looking some bit like?",
+                    h.img(src="cid:%s" % icon_cid[1:-1]),
+                )
+            )
+        ), subtype='html')
+        # note that we needed to peel the <> off the msgid for use in the html.
 
+        # Now add the related image to the html part.
+        with open(subscribers.sign_off_icon, 'rb') as img:
+            msg.get_payload()[1].add_related(img.read(), 'image', 'jpeg',
+                                             cid=icon_cid)
         for filename in files_to_attach:
             # Guess the content type based on the file's extension.  Encoding
             # will be ignored, although we should check for simple things like
@@ -111,15 +130,13 @@ def main():
                                    maintype=maintype,
                                    subtype=subtype,
                                    filename=filename)
-        answer = fixed_answer or input("send this mail (y/n)?").strip()
+        answer = fixed_answer or input("send this mail (yes, no or quit )?").strip()
+        if answer in ('q', 'quit'):
+            sys.exit(0)
         if answer in ('y', 'yes'): # 'send' in sys.argv:
             with smtplib.SMTP('smtp.upcmail.nl') as s:
                 s.send_message(msg)
                 print ("mail has been sent to '%s'." % email_addr)
-    if 0: # provisioanlly removed! 'send' not in sys.argv:
-        print ( "^^^^^^^^^\n"
-                "if above text looks all right, send mail by entering command:\n"
-                "music_mailer.py send\n")
 
 if __name__ == '__main__':
     main()

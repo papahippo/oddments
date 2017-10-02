@@ -82,6 +82,8 @@ def main():
             if instrument_cre.search(candidate.lower()):
                 print ("  %s" % candidate)
                 files_to_attach.append(candidate)
+            else:
+                print ("NOT  %s" % candidate)
         if not files_to_attach:
             # message below can get in the way, so let's suppress it:
             # print("I found nothing to attach so will not send mail at all to %s" %email_addr)
@@ -102,9 +104,9 @@ def main():
         msg.set_content(subscribers.salutation.format(**locals()) + "\n\n"
             + subscribers.pre_text +"\n\n"
             + file_list + "\n\n"
+            + subscribers.sign_off  + "\n\n"
             + subscribers.post_text + "\n\n"
-            + subscribers.sign_off  + "\n"
-        )
+                        )
         # Add the html version.  This converts the message into a multipart/alternative
         # container, with the original text message as the first part and the new html
         # message as the second part.
@@ -117,9 +119,9 @@ def main():
                     h.p | subscribers.salutation.format(**locals()),
                     h.p | subscribers.pre_text,
                     h.p | ([(name, h.br) for name in files_to_attach]),
-                    h.p | subscribers.post_text,
                     h.p | (h.img(src="cid:%s" % icon_cid[1:-1]), subscribers.sign_off),
-                )
+                    h.p | (h.em | (h.small |subscribers.post_text)),
+                      )
             )
         ), subtype='html')
         # note that we needed to peel the <> off the msgid for use in the html.

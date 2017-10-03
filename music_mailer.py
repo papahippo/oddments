@@ -19,6 +19,7 @@ sys.path.insert(0, '')
 def main():
     recipient_patterns = []
     script_filename = sys.argv.pop(0)
+    print ("running '%s' in '%s'..." %(script_filename, os.getcwd()))
     fixed_answer = subscribers = None
     while sys.argv:
         arg = sys.argv.pop(0)

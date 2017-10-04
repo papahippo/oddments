@@ -113,7 +113,7 @@ class EyeSDNFile:
 def main():
     prog = sys.argv.pop(0)
     log =  EyeSDNFile(sys.argv and sys.argv.pop() or
-                      '/home/gill/log/misdn_ws.log', 'rb', dither=0.2)
+                      '/home/gill/log/misdn_ws.log', 'rb', dither=0.5)
     while 1:
         log.process_next_packet()
 

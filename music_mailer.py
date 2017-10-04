@@ -24,11 +24,13 @@ def main():
     path_elements = cwd.split(os.sep)
     mailing_id = path_elements.pop()
     try:
+        sys.path.insert(0, '')
         import subscribers
+        sys.path.pop(0)
     except ImportError:
         print("Can't import subscribers module; did you forget to copy 'subscribers.py' to '%s'"
               "\n or are you in not in the per-mailing directory?" % cwd)
-        sys.exist(990)
+        sys.exit(990)
     # identify all possible attachments once only, before chacking per-user.
     #
     ok_exts = ('.pdf', '.jpg', '.jpeg')
@@ -42,7 +44,7 @@ def main():
             files_to_attach = None
         if not files_to_attach:
             # message below can get in the way, so maybe suppress it?:
-            print("I found nothing to attach so will not send mail at all to %s" %email_addr)
+            print("I found nothing to attach so will not send mail at all to '%s'" % name)
             continue
         if not email_addr:
             print ("We have no email address for %s."  % name)
@@ -51,12 +53,16 @@ def main():
         # Create the message
         msg = EmailMessage()
         subject = subscribers.title.format(**locals())
-        print('mail subject will be "%s"' % subject)
+        files_to_attach.sort()
+        file_list = ",\n".join(['      %s' %filename for filename in files_to_attach])
+        print('preparing mail for intrument (group) "%s"' % name)
+        print('    mail subject will be "%s"' % subject)
+        print('    mail recipient(s) will be "%s"' % email_addr)
+        print('    mail attachment(s) will be ...\n%s' % file_list)
         msg['Subject'] = subject
         msg['To'] = email_addr
         msg['From'] = 'hippos@chello.nl'
         # msg.preamble = 'You will not see this in a MIME-aware mail reader.\n'
-        file_list = ",\n".join(['  %s' %filename for filename in files_to_attach])
         msg.set_content(subscribers.salutation.format(**locals()) + "\n\n"
             + subscribers.pre_text +"\n\n"
             + file_list + "\n\n"
@@ -87,23 +93,25 @@ def main():
             msg.get_payload()[1].add_related(img.read(), 'image', 'jpeg',
                                              cid=icon_cid)
         for filename in files_to_attach:
+            rel_name = os.path.join(name, filename)
             # Guess the content type based on the file's extension.  Encoding
             # will be ignored, although we should check for simple things like
             # gzip'd or compressed files.
-            ctype, encoding = mimetypes.guess_type(filename)
+            ctype, encoding = mimetypes.guess_type(rel_name)
             if ctype is None or encoding is not None:
                 # No guess could be made, or the file is encoded (compressed), so
                 # use a generic bag-of-bits type.
                 ctype = 'application/octet-stream'
             maintype, subtype = ctype.split('/', 1)
-            with open(filename, 'rb') as fp:
+            with open(rel_name, 'rb') as fp:
                 msg.add_attachment(fp.read(),
                                    maintype=maintype,
                                    subtype=subtype,
                                    filename=filename)
+        print ("length of message is %u bytes" % len(msg.__bytes__()))
         if command in ('q', 'quit'):
             sys.exit(0)
-        if command in ('s', 'send'): # 'send' in sys.argv:
+        if command in ('s', 'send',): # 'send' in sys.argv:
             with smtplib.SMTP('smtp.upcmail.nl') as s:
                 s.send_message(msg)
                 print ("mail has been sent to '%s'." % email_addr)

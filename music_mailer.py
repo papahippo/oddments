@@ -1,13 +1,16 @@
 #!/usr/bin/python3
-"""
-This is really a branch of music_mailer.py.... and would be handled as such if I were
-just a bt more competent and conident with git!
-"""
+
 import sys, os, re
 import smtplib
+
+from email import encoders
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
+from email.mime.base import MIMEBase
+
 # For guessing MIME type based on file name extension
 import mimetypes
-from email.message import EmailMessage
 from email.utils import make_msgid
 
 from phileas import _html40 as h
@@ -50,8 +53,8 @@ def main():
             print ("We have no email address for %s."  % name)
             print ("perhaps you need to print the above would-be attachments?")
             continue
-        # Create the message
-        msg = EmailMessage()
+        # Create message container - the correct MIME type is multipart/alternative.
+        msg = MIMEMultipart()
         subject = subscribers.title.format(**locals())
         files_to_attach.sort()
         file_list = ",\n".join(['      %s' %filename for filename in files_to_attach])
@@ -62,36 +65,53 @@ def main():
         msg['Subject'] = subject
         msg['To'] = email_addr
         msg['From'] = 'hippos@chello.nl'
-        # msg.preamble = 'You will not see this in a MIME-aware mail reader.\n'
-        msg.set_content(subscribers.salutation.format(**locals()) + "\n\n"
-            + subscribers.pre_text +"\n\n"
-            + file_list + "\n\n"
-            + subscribers.sign_off  + "\n\n"
-            + subscribers.post_text + "\n\n"
-                        )
-        # Add the html version.  This converts the message into a multipart/alternative
-        # container, with the original text message as the first part and the new html
-        # message as the second part.
-        icon_cid = make_msgid()
-        msg.add_alternative(str(
+        msg.preamble = 'You will not see this in a MIME-aware mail reader.\n'
+
+# prepare the plain version of the message body
+        if 0:
+            plain_layout = (subscribers.salutation + "\n\n"
+                + subscribers.pre_text +"\n\n"
+                + file_list + "\n\n"
+                + subscribers.sign_off  + "\n\n"
+                + subscribers.post_text + "\n\n"
+                      )
+        else:
+            plain_layout = ("[HMTL email hieronder en/of attachments niet leesbaar?"
+                            " neem dan meteen contact op met verzender!]")
+# prepare the HTML version of the message body
+# note that we need to peel the <> off the msgid for use in the html.
+        icon_content_id = make_msgid()
+        html_layout = str(
             h.html | ("\n",
                 h.head | (
                 ),
                 h.body | (
-                    h.p | subscribers.salutation.format(**locals()),
+                    h.p | subscribers.salutation,
                     h.p | subscribers.pre_text,
                     h.p | ([(name, h.br) for name in files_to_attach]),
-                    h.p | (h.img(src="cid:%s" % icon_cid[1:-1]), subscribers.sign_off),
+                    h.p | (h.img(src="cid:%s" % icon_content_id[1:-1]), subscribers.sign_off),
                     h.p | (h.em | (h.small |subscribers.post_text)),
                       )
             )
-        ), subtype='html')
-        # note that we needed to peel the <> off the msgid for use in the html.
+        )
+        # Prepare both parts and insert them into the message container.
+        # According to RFC 2046, the last part of a multipart message, in this case
+        # the HTML message, is best and preferred.
+        for layout, subtype in (
+                (plain_layout, 'plain'),
+                (html_layout,  'html'),
+        ):
+            text = layout.format(**locals())
+            part =  MIMEText(text, subtype)
+            msg.attach(part)
 
         # Now add the related image to the html part.
         with open(subscribers.sign_off_icon, 'rb') as img:
-            msg.get_payload()[1].add_related(img.read(), 'image', 'jpeg',
-                                             cid=icon_cid)
+            img_data = img.read()
+        part = MIMEImage(img_data)
+        part.add_header('Content-Id', icon_content_id)
+        msg.attach(part)
+
         for filename in files_to_attach:
             rel_name = os.path.join(name, filename)
             # Guess the content type based on the file's extension.  Encoding
@@ -103,12 +123,15 @@ def main():
                 # use a generic bag-of-bits type.
                 ctype = 'application/octet-stream'
             maintype, subtype = ctype.split('/', 1)
-            with open(rel_name, 'rb') as fp:
-                msg.add_attachment(fp.read(),
-                                   maintype=maintype,
-                                   subtype=subtype,
-                                   filename=filename)
-        print ("length of message is %u bytes" % len(msg.__bytes__()))
+            with open(rel_name, 'rb') as attachment:
+                attachment_data = attachment.read()
+            part = MIMEBase(maintype, subtype)
+            part.set_payload(attachment_data)
+            # Encode the payload using Base64
+            encoders.encode_base64(part)
+            part.add_header('Content-Disposition', 'attachment', filename=os.path.basename(rel_name))
+            msg.attach(part)
+        print ("length of message is %u bytes" % len(bytes(msg)))
         if command in ('q', 'quit'):
             sys.exit(0)
         if command in ('s', 'send',): # 'send' in sys.argv:

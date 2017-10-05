@@ -15,8 +15,6 @@ from email.utils import make_msgid
 
 from phileas import _html40 as h
 
-WITH_IMAGE = 0
-
 def main():
     script_filename = sys.argv.pop(0)
     script_shortname = os.path.split(script_filename)[1]
@@ -69,47 +67,30 @@ def main():
         msg['From'] = 'hippos@chello.nl'
         msg.preamble = 'You will not see this in a MIME-aware mail reader.\n'
 
+        textual_part = MIMEMultipart('alternative')
 # prepare the plain version of the message body
-        if WITH_IMAGE:
-            plain_layout = (subscribers.salutation + "\n\n"
-                + subscribers.pre_text +"\n\n"
-                + file_list + "\n\n"
-                + subscribers.sign_off  + "\n\n"
-                + subscribers.post_text + "\n\n"
-                      )
-        else:
-            plain_layout = ("[HMTL email hieronder en/of attachments niet leesbaar?"
-                            " neem dan meteen contact op met verzender!]")
+        plain_layout = (subscribers.salutation + "\n\n"
+            + subscribers.pre_text +"\n\n"
+            + file_list + "\n\n"
+            + subscribers.sign_off  + "\n\n"
+            + subscribers.post_text + "\n\n"
+                  )
 # prepare the HTML version of the message body
 # note that we need to peel the <> off the msgid for use in the html.
-        if WITH_IMAGE:
-            icon_content_id = make_msgid()
-            html_layout = str(
-                h.html | ("\n",
-                    h.head | (
-                    ),
-                    h.body | (
-                        h.p | subscribers.salutation,
-                        h.p | subscribers.pre_text,
-                        h.p | ([(name, h.br) for name in files_to_attach]),
-                        h.p | (h.img(src="cid:%s" % icon_content_id[1:-1]), subscribers.sign_off),
-                        h.p | (h.em | (h.small |subscribers.post_text)),
-                          )
-                )
+        icon_content_id = make_msgid()
+        html_layout = str(
+            h.html | ("\n",
+                h.head | (
+                ),
+                h.body | (
+                    h.p | subscribers.salutation,
+                    h.p | subscribers.pre_text,
+                    h.p | ([(name, h.br) for name in files_to_attach]),
+                    h.p | (h.img(src="cid:%s" % icon_content_id[1:-1]), subscribers.sign_off),
+                    h.p | (h.em | (h.small |subscribers.post_text)),
+                      )
             )
-        else:
-            html_layout = str(
-                h.html | ("\n",
-                    h.head | (
-                    ),
-                    h.body | (
-                        h.p | subscribers.salutation,
-                        h.p | subscribers.pre_text,
-                        h.p | ([(name, h.br) for name in files_to_attach]),
-                        h.p | (h.em | (h.small |subscribers.post_text)),
-                          )
-                )
-            )
+        )
 
         # Prepare both parts and insert them into the message container.
         # According to RFC 2046, the last part of a multipart message, in this case
@@ -119,16 +100,19 @@ def main():
                 (html_layout,  'html'),
         ):
             text = layout.format(**locals())
-            part =  MIMEText(text, subtype)
-            msg.attach(part)
+            sub_part =  MIMEText(text, subtype)
+            textual_part.attach(sub_part)
 
-        if WITH_IMAGE:
-            # Now add the related image to the html part.
-            with open(subscribers.sign_off_icon, 'rb') as img:
-                img_data = img.read()
-            part = MIMEImage(img_data)
-            part.add_header('Content-Id', icon_content_id)
-            msg.attach(part)
+        related_part = MIMEMultipart('related')
+        related_part.attach(textual_part)
+
+        with open(subscribers.sign_off_icon, 'rb') as img:
+            img_data = img.read()
+        image_part = MIMEImage(img_data)
+        image_part.add_header('Content-Id', icon_content_id)
+        related_part.attach(image_part)
+
+        msg.attach(related_part)
 
         for filename in files_to_attach:
             rel_name = os.path.join(name, filename)

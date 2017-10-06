@@ -15,17 +15,33 @@ from email.utils import make_msgid
 
 from phileas import _html40 as h
 
+MagicMailTreeName = 'MagicMailTree'
+# ok_exts = ('.pdf', '.jpg', '.jpeg')
+
 def main():
     script_filename = sys.argv.pop(0)
     script_shortname = os.path.split(script_filename)[1]
-    ok_commands = ('check', 'send', 'quit')
+    ok_commands = ('take', 'check', 'send', 'quit')
     command = (sys.argv and sys.argv.pop(0)) or 'check'
     if command not in ok_commands:
         print("error: %s is not one of %s." %(command, ok_commands))
-        sys.exit(990)
+        sys.exit(999)
     cwd = os.getcwd()
     path_elements = cwd.split(os.sep)
     mailing_id = path_elements.pop()
+    if path_elements.pop() != MagicMailTreeName:
+        print("error: %s is not within a '%s' directory." %(mailing_id, MagicMailTreeName))
+        sys.exit(997)
+
+    if command not in ('take',):
+        dir_to_take_from = None
+    else:
+        if not sys.argv:
+            print("error: take requires directory argument.")
+            sys.exit(998)
+            dir_to_take_from = sys.argv.pop()
+        files_to_take = os.listdir(dir_to_take_from)
+
     try:
         sys.path.insert(0, '')
         import subscribers
@@ -34,9 +50,8 @@ def main():
         print("Can't import subscribers module; did you forget to copy 'subscribers.py' to '%s'"
               "\n or are you in not in the per-mailing directory?" % cwd)
         sys.exit(990)
-    # identify all possible attachments once only, before chacking per-user.
+    # identify all possible attachments once only, before checking per-user.
     #
-    ok_exts = ('.pdf', '.jpg', '.jpeg')
     # now look at each potential recipient in turn:
     #
     for name, email_addr, instrument_re in subscribers.what_goes_to_whom:
@@ -45,6 +60,25 @@ def main():
         except FileNotFoundError:
             print ("warning: no subdirectory for instrument group '%s' " % name)
             files_to_attach = None
+
+        if dir_to_take_from:
+# command 'take'
+            if files_to_attach is None:
+                print("creating subdirectory for instrument group '%s' " % name)
+                os.mkdir(name)
+            if files_to_attach:
+                print("%u files/links are already present for instrument group '%s': %s"
+                       % (name, files_to_attach))
+            instrument_cre = re.compile(instrument_re)
+            for candidate in files_to_take:
+                if not instrument_cre.search(candidate.lower()):
+                    continue
+                print("putting symbolic link  to '%s' in subdirectory '%s'"
+                          % (candidate, name))
+                os.symlink(dir_to_take_from + os.sep + candidate,
+                           name + os.sep + candidate)
+            continue # that's all for take command!
+# command 'check' or 'send'
         if not files_to_attach:
             # message below can get in the way, so maybe suppress it?:
             print("I found nothing to attach so will not send mail at all to '%s'" % name)

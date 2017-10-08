@@ -39,8 +39,15 @@ def main():
         if not sys.argv:
             print("error: take requires directory argument.")
             sys.exit(998)
-            dir_to_take_from = sys.argv.pop()
-        files_to_take = os.listdir(dir_to_take_from)
+        dir_to_take_from = sys.argv.pop()
+        files_to_take = []
+        for simple_name in os.listdir(dir_to_take_from):
+            longer_name = dir_to_take_from + os.sep + simple_name
+            if os.path.isdir(longer_name):
+                print ("warning: ignoring sub-dir '%s'; did you forget to flatten source directory?"
+                       % longer_name)
+                continue
+            files_to_take.append((simple_name, longer_name))
 
     try:
         sys.path.insert(0, '')
@@ -68,15 +75,19 @@ def main():
                 os.mkdir(name)
             if files_to_attach:
                 print("%u files/links are already present for instrument group '%s': %s"
-                       % (name, files_to_attach))
+                       % ( len(files_to_attach), name, files_to_attach))
             instrument_cre = re.compile(instrument_re)
-            for candidate in files_to_take:
-                if not instrument_cre.search(candidate.lower()):
+            for simple_name, longer_name in files_to_take:
+                if not instrument_cre.search(simple_name.lower()):
                     continue
                 print("putting symbolic link  to '%s' in subdirectory '%s'"
-                          % (candidate, name))
-                os.symlink(dir_to_take_from + os.sep + candidate,
-                           name + os.sep + candidate)
+                          % (simple_name, name))
+                try:
+                    os.symlink(longer_name,
+                           name + os.sep + simple_name)
+                except FileExistsError:
+                    print ("warning: '%s' already exists in '%s' and will NOT be overwritten!"
+                           %(simple_name, name))
             continue # that's all for take command!
 # command 'check' or 'send'
         if not files_to_attach:

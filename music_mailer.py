@@ -18,6 +18,15 @@ from phileas import _html40 as h
 MagicMailTreeName = 'MagicMailTree'
 # ok_exts = ('.pdf', '.jpg', '.jpeg')
 
+def gather(list_of_name_tuples, upper_dir):
+    for simple_name in os.listdir(upper_dir):
+        longer_name = upper_dir + os.sep + simple_name
+        if os.path.isdir(longer_name):
+            gather(list_of_name_tuples, longer_name)
+        else:
+            list_of_name_tuples.append((simple_name, longer_name))
+
+
 def main():
     script_filename = sys.argv.pop(0)
     script_shortname = os.path.split(script_filename)[1]
@@ -41,13 +50,8 @@ def main():
             sys.exit(998)
         dir_to_take_from = sys.argv.pop()
         files_to_take = []
-        for simple_name in os.listdir(dir_to_take_from):
-            longer_name = dir_to_take_from + os.sep + simple_name
-            if os.path.isdir(longer_name):
-                print ("warning: ignoring sub-dir '%s'; did you forget to flatten source directory?"
-                       % longer_name)
-                continue
-            files_to_take.append((simple_name, longer_name))
+        gather(files_to_take, dir_to_take_from)
+        print('\n'.join([str(t) for t in files_to_take]))
 
     try:
         sys.path.insert(0, '')

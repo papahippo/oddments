@@ -4,11 +4,12 @@ import sys, os
 import sane
 import numpy
 from PIL import Image
+
 #
 # Change these for 16bit / grayscale scans
 #
 depth = None
-mode = 'lineart' # ''color'
+mode = 'lineart'  # ''color'
 
 #
 # Initialize sane
@@ -55,11 +56,10 @@ print('original resolution =', dev.resolution)
 dev.resolution = 300
 print('changed resolution =', dev.resolution)
 # dev.threshold=75
-#params = dev.get_parameters()
-#print('after threshold change: Device parameters:', params)
+# params = dev.get_parameters()
+# print('after threshold change: Device parameters:', params)
 # Start a scan and get and PIL.Image object
 #
-png_name = 'tussen.png'
 
 while 1:
     print("enter filename: (control-C to quit)")
@@ -72,5 +72,8 @@ while 1:
     im = dev.snap()
     # im = im.convert('L')
     # im = im.point(lambda x: x > 150)
+    name, ext = os.path.splitext(fn)
+    png_name = name + '.png'
     im.save(png_name)
-    os.system("convert %s %s" % (png_name, fn))
+    if ext != '.png':
+        os.system("convert %s %s" % (png_name, fn))

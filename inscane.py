@@ -26,7 +26,7 @@ print('Available devices:', devices)
 #
 # Open first device
 #
-dev = sane.open(devices[1][0])
+dev = sane.open(devices[0][0])
 
 #
 # Set some options
@@ -60,38 +60,45 @@ print('changed resolution =', dev.resolution)
 # print('after threshold change: Device parameters:', params)
 # Start a scan and get and PIL.Image object
 #
-page_files = []
+all_png_files = []
 name = 'scanned'
 while 1:
     pdf_name = name + '.pdf'
-    print("enter '+' to scan page %n, 'q' to quit, or a decimal numer (1-99) to change black-white threshold (currently %d):"
-          %(1+len(page_files), dev.threshold))
-    if page_files:
-        print ("or enter '=' to accept and save %u accumulated pages as %s, or enter '-' to forget lastest scanned page"
-               %(pdf_name, len(page_files))
-        print("or enter name (no suffix) to change name from '%s':" % name)
+    new_page_num = 1+len(all_png_files)
+    new_png_name = '%s-page%03u.png' %(name, new_page_num)
+    print("enter '+' to scan '%s', 'q' to quit, or a decimal numer (1-99) to change black-white threshold (currently %d):"
+          %(new_png_name, dev.threshold))
+    print("or enter name (no suffix) to change name from '%s':" % name)
+    if all_png_files:
+        print ("or enter '=' to accept and save %u accumulated pages as %s:"
+               % (len(all_png_files), pdf_name))
+        print("or enter '-' to forget lastest scanned page:")
     answer = sys.stdin.readline().strip()
     if answer == 'q':
         sys.exit(0)
     if answer == '+':
         dev.start()
         im = dev.snap()
-        png_name = '%s-page%03u.png' %(name, 1 + len(page_files))
-        im.save(png_name)
-        page_files.append(png_name)
+
+        im.save(new_png_name)
+        all_png_files.append(new_png_name)
         continue
     if answer == '-':
-        if page_files:
-            page_files.pop()
+        if all_png_files:
+            all_png_files.pop()
         continue
     if answer == '=':
-
+        cmd = "convert %s %s" % (' '.join(all_png_files), pdf_name)
+        print ("executing command '%s'..." %cmd)
+        os.system(cmd)
+        print("... done!")
+        all_png_files = []  # clear the decks!
+        continue
     if answer.isnumeric():
         dev.threshold = int(answer)
         continue
-
-    # im = im.convert('L')
-    # im = im.point(lambda x: x > 150)
-    name, ext = os.path.splitext(fn)
-    if ext != '.png':
-        os.system("convert %s %s" % (png_name, fn))
+    name = answer
+#
+# leve de ouwe meuk:
+# im = im.convert('L')
+# im = im.point(lambda x: x > 150)

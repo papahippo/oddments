@@ -53,27 +53,45 @@ if 0:
 params = dev.get_parameters()
 print('Device parameters:', params)
 print('original resolution =', dev.resolution)
-dev.resolution = 300
+dev.resolution = 600
 print('changed resolution =', dev.resolution)
 # dev.threshold=75
 # params = dev.get_parameters()
 # print('after threshold change: Device parameters:', params)
 # Start a scan and get and PIL.Image object
 #
-
+page_files = []
+name = 'scanned'
 while 1:
-    print("enter filename: (control-C to quit)")
-    fn = sys.stdin.readline().strip()
-    if ',' in fn:
-        fn, sth = fn.split(',')
-        if sth:
-            dev.threshold = int(sth)
-    dev.start()
-    im = dev.snap()
+    pdf_name = name + '.pdf'
+    print("enter '+' to scan page %n, 'q' to quit, or a decimal numer (1-99) to change black-white threshold (currently %d):"
+          %(1+len(page_files), dev.threshold))
+    if page_files:
+        print ("or enter '=' to accept and save %u accumulated pages as %s, or enter '-' to forget lastest scanned page"
+               %(pdf_name, len(page_files))
+        print("or enter name (no suffix) to change name from '%s':" % name)
+    answer = sys.stdin.readline().strip()
+    if answer == 'q':
+        sys.exit(0)
+    if answer == '+':
+        dev.start()
+        im = dev.snap()
+        png_name = '%s-page%03u.png' %(name, 1 + len(page_files))
+        im.save(png_name)
+        page_files.append(png_name)
+        continue
+    if answer == '-':
+        if page_files:
+            page_files.pop()
+        continue
+    if answer == '=':
+
+    if answer.isnumeric():
+        dev.threshold = int(answer)
+        continue
+
     # im = im.convert('L')
     # im = im.point(lambda x: x > 150)
     name, ext = os.path.splitext(fn)
-    png_name = name + '.png'
-    im.save(png_name)
     if ext != '.png':
         os.system("convert %s %s" % (png_name, fn))

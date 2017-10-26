@@ -11,9 +11,12 @@ def vprint(this_verbosity, *pp, **kw):
 
 
 def process_child(child_name):
-    vprint(1, "applying command '%s' to child directory '%s'"
+    vprint(2, "applying command '%s' to child directory '%s'"
           %(shared.command, child_name))
-    # ...
+    for title in os.listdir(child_name):
+        vprint(1, "applying command '%s' to subdir name (= music title) '%s'"
+               % (shared.command, title))
+        # ...
 
 
 def main():
@@ -36,12 +39,12 @@ def main():
     )
     for child_name in child_name_list:
         if not os.path.isdir(child_name):
-            vprint (1, "ignoring plain file at top level of archive '%s'" % child_name)
+            vprint (2, "ignoring plain file at top level of archive '%s'" % child_name)
             continue
         elif len(child_name)==1 and 'A' <= child_name <= 'Z':
             process_child(child_name)
         else:
-            vprint(1, "ignoring directory %s at top level of archive (name is not a capital letter)"
+            vprint(2, "ignoring directory %s at top level of archive (name is not a capital letter)"
                    % child_name)
             continue
 if __name__ == '__main__':

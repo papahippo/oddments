@@ -27,7 +27,7 @@ print('Available devices:', devices)
 # Open first device
 #
 dev = sane.open(devices[0][0])
-
+print (dev.optlist)
 #
 # Set some options
 #
@@ -75,6 +75,7 @@ while 1:
         print("or enter '-' to forget lastest scanned page:")
     answer = sys.stdin.readline().strip()
     if answer == 'q':
+        dev.close()
         sys.exit(0)
     if answer == '+':
         dev.start()

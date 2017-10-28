@@ -10,15 +10,21 @@ def vprint(this_verbosity, *pp, **kw):
         return print(*pp, **kw)
 
 
-def process_child(child_name):
-    vprint(2, "applying command '%s' to child directory '%s'"
-          %(shared.command, child_name))
-    for title in os.listdir(child_name):
+def process_section_dir(section_name):
+    vprint(2, "applying command '%s' to section directory '%s'"
+           % (shared.command, section_name))
+    for title in os.listdir(section_name):
         vprint(1, "applying command '%s' to subdir name (= music title) '%s'"
                % (shared.command, title))
-        # ...
-
-
+        rel_title_name = section_name + os.sep + title
+        for item_within_title in os.listdir(rel_title_name):
+            name_parts = (section_name, title, item_within_title)
+            rel_name = os.sep.join(name_parts)
+            shellable_name = os.sep.join(['"%s"' % part for part in name_parts])
+            if os.path.isdir(rel_name):
+                print("\t %s is a directory" % shellable_name)
+            else:
+                pass
 def main():
     # using same coding technique as music mailer for as long as this seems wise!)
     script_filename = sys.argv.pop(0)
@@ -33,19 +39,19 @@ def main():
     if not cwd.endswith('Archive'):
         print("error: %s doesn't look like an Archive directory." % (cwd))
         sys.exit(998)
-    child_name_list = (
+    section_name_list = (
         (sys.argv and not sys.argv[0].startswith('-')) and sys.argv.pop(0)
         or sorted(os.listdir())
     )
-    for child_name in child_name_list:
-        if not os.path.isdir(child_name):
-            vprint (2, "ignoring plain file at top level of archive '%s'" % child_name)
+    for section_name in section_name_list:
+        if not os.path.isdir(section_name):
+            vprint (2, "ignoring plain file at top level of archive '%s'" % section_name)
             continue
-        elif len(child_name)==1 and 'A' <= child_name <= 'Z':
-            process_child(child_name)
+        elif len(section_name)==1 and 'A' <= section_name <= 'Z':
+            process_section_dir(section_name)
         else:
             vprint(2, "ignoring directory %s at top level of archive (name is not a capital letter)"
-                   % child_name)
+                   % section_name)
             continue
 if __name__ == '__main__':
     main()

@@ -33,7 +33,9 @@ class Scene(QtGui.QGraphicsScene):
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
     v = Scene()
-    svg = QtCore.QUrl("test.svg")
-    v.webview.load(svg)
+    with open("test.svg", 'rb') as svg_file:
+        svg_bytes = svg_file.read()
+    #svg = QtCore.QUrl()
+    v.webview.setContent(svg_bytes)
     v.view.show()
     sys.exit(app.exec_())

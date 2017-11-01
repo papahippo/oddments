@@ -32,7 +32,7 @@ def check_images(effort):
     headings = re.split(r'\s+', out_lines.pop(0))
     _hyphens = out_lines.pop(0)
     if not out_lines:
-        vprint(1, "no images in %s" % shared.ok_filename)
+        vprint(1, "no images in %s" % shared.pdf_filename)
         return None  # => no images
     for l in out_lines:
         if len(l)<3:
@@ -41,14 +41,14 @@ def check_images(effort):
         values = re.split(r'\s+', l)
         field =dict(zip(headings, values[1:]))
         vprint(3, "field['object']", field['object'])
-        if field['object']=='[inline]':
-            vprint(1, "%s contains in-line image(s)" % shared.pdf_filename)
+        if field['object']=='[inline]':  # or field['enc']!='ccitt':
+            vprint(1, "%s contains in-line or not ccitt-encoded image(s)" % shared.pdf_filename)
             call("pdf2ps %s %s" % (shared.pdf_filename, shared.ps_filename), shell=True)
             call("ps2pdf %s %s" % (shared.ps_filename, shared.pdf_filename), shell=True)
             return True
         if field['color']!='gray' or int(field['bpc'])!=1:
             vprint(1, "%s is %u bit(s) %s (not 1 bit gray)" % (shared.pdf_filename, int(field['bpc']), field['color']))
-            call("convert %s -monochrome -threshold 10 %s" % (shared.pdf_filename, shared.tmp_pdf_filename), shell=True)
+            call("convert %s -monochrome -threshold 50 %s" % (shared.pdf_filename, shared.tmp_pdf_filename), shell=True)
             # unfinished!
             #call("cp %s %s"  % (shared.tmp_pdf_filename, shared.pdf_filename), shell=True)
             return True

@@ -23,8 +23,8 @@ def check_images(effort):
         outs, errs = proc.communicate()
     out_lines = outs.decode(sys.stdout.encoding).split('\n')
     err_lines = errs.decode(sys.stderr.encoding).split('\n')
-    if 0: # err_lines:
-        print("(buggy old?) pdfimages gave errors on %s" % shared.pdf_filename)
+    if err_lines:
+        vprint(3, "(buggy old?) pdfimages gave errors on %s" % shared.pdf_filename)
         return None
     if len(out_lines)<2:
         vprint(1, "not a proper PDF? %s" % shared.pdf_filename)
@@ -60,7 +60,7 @@ def process_pdf():
     for effort in range(2):
         if not check_images(effort):
             return
-    vprint (1, "%s is still not right after 'fix'." % shared.pdf_filename)
+    vprint (0, "%s is still not right after 'fix'." % shared.pdf_filename)
 
 def pdf_walk(path):
     for root, dirs, files in os.walk(path):

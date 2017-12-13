@@ -29,6 +29,23 @@ class Scene(QtGui.QGraphicsScene):
         fsize = frame.contentsSize()
         self.webview.resize(QtCore.QSizeF(fsize))
         self.view.resize(fsize.width() + 10, fsize.height() + 10)
+        self.webview.ensureVisible(1888.0,1888.0, 1.0, 1.0)
+
+    def mousePressEvent(self, event):
+        scP = event.scenePos()
+        x = scP.x()
+        y = scP.y()
+        print ("MyScene.mousePressEvent: "+
+               #event.pos(), event.scenePos(), event.screenPos()
+               'scenePos x,y =' + str(x) + ',' + str(y), '  button =' + str(event.button()),
+               'scene width =' + str(self.width()) + ' scene height ='+ str(self.height()),
+        )
+        self.view.ensureVisible(x, y+50., 1., 1.)
+        if event.button() == 1:
+            # self.parent().locateXY(x, y)
+            event.accept()
+        else:
+            event.ignore()
 
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)

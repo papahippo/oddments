@@ -23,9 +23,9 @@ def check_images(effort):
         outs, errs = proc.communicate()
     out_lines = outs.decode(sys.stdout.encoding).split('\n')
     err_lines = errs.decode(sys.stderr.encoding).split('\n')
-    if err_lines:
-        vprint(3, "(buggy old?) pdfimages gave errors on %s" % shared.pdf_filename)
-        return None
+    if len(err_lines)>1:
+        vprint(3, "warning: (buggy old?) pdfimages gave errors on %s" % shared.pdf_filename)
+        # return None
     if len(out_lines)<2:
         vprint(1, "not a proper PDF? %s" % shared.pdf_filename)
         return None  # => no images
@@ -48,7 +48,7 @@ def check_images(effort):
             return True
         if field['color']!='gray' or int(field['bpc'])!=1:
             vprint(1, "%s is %u bit(s) %s (not 1 bit gray)" % (shared.pdf_filename, int(field['bpc']), field['color']))
-            call("convert %s -monochrome -threshold 50 %s" % (shared.pdf_filename, shared.tmp_pdf_filename), shell=True)
+            # call("convert %s -monochrome -threshold 50 %s" % (shared.pdf_filename, shared.tmp_pdf_filename), shell=True)
             # unfinished!
             #call("cp %s %s"  % (shared.tmp_pdf_filename, shared.pdf_filename), shell=True)
             return True
@@ -59,6 +59,7 @@ def check_images(effort):
 def process_pdf():
     for effort in range(2):
         if not check_images(effort):
+            vprint(3, "%s is ok!" % shared.pdf_filename)
             return
     vprint (0, "%s is still not right after 'fix'." % shared.pdf_filename)
 
@@ -68,6 +69,7 @@ def pdf_walk(path):
             name_, ext_ = os.path.splitext(file_)
             if ext_.lower() not in ('.pdf',):
                 continue
+            vprint (2, "found '%s'" % file_)
             rel_filename = os.path.join(root, file_)
             shared.pdf_filename = shlex.quote(rel_filename)
             process_pdf()

@@ -16,20 +16,20 @@ class Walker:
 
     def handle_file(self, root_, filename_):
         self.vprint(2, self.name_, 'handle_file', root_, filename_)
-        self.rel_filename = os.path.join(root_, filename_)
-        self.shl_filename = shlex.quote(self.rel_filename)
         return False
 
-    def handle_dir(self, root_, dirname_):
-        self.vprint(2, self.name_, 'handle_dir', root_, dirname_)
+    def handle_item(self, root_, item_name, is_dir):
+        self.vprint(2, self.name_, 'isdir=%u' % is_dir, root_, item_name)
+        self.composite_pathname = os.path.join(root_, item_name)
+        self.shl_pathname = shlex.quote(self.composite_pathname)
         return False
 
     def walk(self, target):
         self.vprint(1, "walking through target:", target)
         for root_, dirs_, files_ in os.walk(target):
-            for items_, handler_ in ((dirs_, self.handle_dir), (files_, self.handle_file),):
+            for items_, isdir_ in ((dirs_, True), (files_, False),):
                 for item_ in items_:
-                    handler_(root_, item_)
+                    self.handle_item(root_, item_, isdir_)
 
 def main(class_):
     print (os.getcwd())

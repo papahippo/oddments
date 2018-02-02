@@ -14,18 +14,18 @@ class Walker:
         if self.verbosity >= this_verbosity:
             return print(*pp, **kw)
 
-    def handle_file(self, root_, file_):
-        self.vprint(2, self.name_, 'handle_file', root_, file_)
-        rel_filename = os.path.join(root_, file_)
-        self.shl_filename = shlex.quote(rel_filename)
+    def handle_file(self, root_, filename_):
+        self.vprint(2, self.name_, 'handle_file', root_, filename_)
+        self.rel_filename = os.path.join(root_, filename_)
+        self.shl_filename = shlex.quote(self.rel_filename)
         return False
 
-    def handle_dir(self, root_, dir_):
-        self.vprint(2, self.name_, 'handle_dir', root_, dir_)
+    def handle_dir(self, root_, dirname_):
+        self.vprint(2, self.name_, 'handle_dir', root_, dirname_)
         return False
 
     def walk(self, target):
-        self.vprint(1, "walking through target", target)
+        self.vprint(1, "walking through target:", target)
         for root_, dirs_, files_ in os.walk(target):
             for items_, handler_ in ((dirs_, self.handle_dir), (files_, self.handle_file),):
                 for item_ in items_:

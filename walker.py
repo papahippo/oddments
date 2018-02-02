@@ -56,26 +56,33 @@ def check_images(effort):
     return False
 
 
-def process_pdf():
+def process_pdf(root_, file_):
+    name_, ext_ = os.path.splitext(file_)
+    if ext_.lower() not in ('.pdf',):
+        return False
+# temporary stub!
+    #print (root_,  ' --- ', file_)
+    #return
+    rel_filename = os.path.join(root_, file_)
+    shared.pdf_filename = shlex.quote(rel_filename)
     for effort in range(2):
         if not check_images(effort):
             return
     vprint (1, "%s is still not right after 'fix'." % shared.pdf_filename)
 
-def pdf_walk(path):
-    for root, dirs, files in os.walk(path):
-        for file_ in files:
-            name_, ext_ = os.path.splitext(file_)
-            if ext_.lower() not in ('.pdf',):
-                continue
-            rel_filename = os.path.join(root, file_)
-            shared.pdf_filename = shlex.quote(rel_filename)
-            process_pdf()
+def dummy_handler(root_, item_):
+    if shared.verbosity:
+        print(root_, item_)
+    return False
 
-def main():
+def main(file_handler=dummy_handler, dir_handler=dummy_handler):
+    print (os.getcwd())
     prog_path = sys.argv.pop(0)
     shared.verbosity = sum([a in ('-v', '--verbose') for a in sys.argv])
-    pdf_walk(sys.argv and (not sys.argv[0].startswith('-')) and sys.argv.pop(0) or '.')
+    target = sys.argv and (not sys.argv[0].startswith('-')) and sys.argv.pop(0) or '.'
+    for root_, dirs_, files_ in os.walk(target):
+        for items_, handler_ in ((dirs_, dir_handler), (files_, file_handler),):
+            for item_ in items_:
+                handler_(root_, item_)
 if __name__ == '__main__':
-    print (os.getcwd())
-    main()
+    main(file_handler=dummy_handler, dir_handler=dummy_handler)

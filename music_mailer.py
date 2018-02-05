@@ -1,5 +1,8 @@
 #!/usr/bin/python3
-
+"""
+music_mailer.py has a symbiotic relationship with 'subscribers.py'; either may play the role of
+main script.
+"""
 import sys, os, re, time, smtplib
 
 from email import encoders
@@ -7,6 +10,23 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from email.mime.base import MIMEBase
+
+class _Subscribers:
+    """
+    This is really a stub - but I have left some usual settings in place!
+    """
+    sender = 'papahippo'
+    title = "[dummy title]'  voor {name}"
+    salutation = "Hallo World,"
+    pre_text = "[dummy pre-text]"
+    post_text = "[dummy post-text]"
+    sign_off = ("[dummy sign_off],\n\n"
+    "Daddock"
+    )
+    sign_off_icon = "/home/gill/MEW_Archive/music_318-73071_vsmall.jpg"
+    what_goes_to_whom = (
+        ('tmp',  'hippos@chello.nl', r'test42'),
+    )
 
 # For guessing MIME type based on file name extension
 import mimetypes
@@ -27,7 +47,7 @@ def gather(list_of_name_tuples, upper_dir):
             list_of_name_tuples.append((simple_name, longer_name))
 
 
-def main():
+def main(subscribers):
     script_filename = sys.argv.pop(0)
     script_shortname = os.path.split(script_filename)[1]
     ok_commands = ('take', 'check', 'send', 'quit')
@@ -39,8 +59,8 @@ def main():
     path_elements = cwd.split(os.sep)
     mailing_id = path_elements.pop()
     if path_elements.pop() != MagicMailTreeName:
-        print("error: %s is not within a '%s' directory." %(mailing_id, MagicMailTreeName))
-        sys.exit(997)
+        print("warning: %s is not within a '%s' directory." %(mailing_id, MagicMailTreeName))
+        # sys.exit(997)
 
     if command not in ('take',):
         dir_to_take_from = None
@@ -53,14 +73,6 @@ def main():
         gather(files_to_take, dir_to_take_from)
         print('\n'.join([str(t) for t in files_to_take]))
 
-    try:
-        sys.path.insert(0, '')
-        import subscribers
-        sys.path.pop(0)
-    except ImportError:
-        print("Can't import subscribers module; did you forget to copy 'subscribers.py' to '%s'"
-              "\n or are you in not in the per-mailing directory?" % cwd)
-        sys.exit(990)
     # identify all possible attachments once only, before checking per-user.
     #
     # now look at each potential recipient in turn:
@@ -110,7 +122,7 @@ def main():
         try:
             sender = subscribers.sender
         except AttributeError:
-            subscribers.sender = sender = "Gill and Larry Myerscough"
+            sender = "Gill and Larry Myerscough"
         print('preparing mail for intrument (group) "%s"' % name)
         print('    mail subject will be "%s"' % subject)
         print('    mail will appear to come from "%s"' % sender)
@@ -200,4 +212,13 @@ def main():
                 print ("mail has been sent to '%s'." % email_addr)
 
 if __name__ == '__main__':
-    main()
+    try:
+        sys.path.insert(0, '')
+        from subscribers import Subscribers
+        sys.path.pop(0)
+    except ImportError:
+        print("Can't import subscribers module; did you forget to copy 'subscribers.py' to '%s'"
+              "\n or are you in not in the per-mailing directory?" % os.getcwd())
+        print ("using dummy settings!")
+        Subscribers = _Subscribers
+    main(Subscribers)

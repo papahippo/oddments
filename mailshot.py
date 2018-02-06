@@ -22,7 +22,7 @@ MagicMailTreeName = 'MagicMailTree'
 def putmsg(*pp, **kw):
     print(*pp, **kw, file=sys.stderr)
 
-class _Subscribers:
+class _Mailshot:
     """
     This is really a stub - but I have left some usual settings in place!
     """
@@ -158,6 +158,10 @@ def main(Subscribers_class):
 # prepare the HTML version of the message body
 # note that we need to peel the <> off the msgid for use in the html.
         icon_content_id = email.utils.make_msgid()
+        if command in ("show",):
+            src = "file://%s" % subscribers.sign_off_icon
+        else:
+            src = "cid:%s" % icon_content_id[1:-1]
         html_layout = str(
             h.html | ("\n",
                 h.head | (
@@ -166,7 +170,7 @@ def main(Subscribers_class):
                     h.p | subscribers.salutation,
                     h.p | subscribers.pre_text,
                     h.p | ([(name, h.br) for name in files_to_attach]),
-                    h.p | (h.img(src="cid:%s" % icon_content_id[1:-1]), subscribers.sign_off),
+                    h.p | (h.img(src=src), subscribers.sign_off),
                     h.p | (h.em | (h.small |subscribers.post_text)),
                       )
             )
@@ -224,4 +228,4 @@ def main(Subscribers_class):
                 putmsg ("mail has been sent to '%s'." % email_addr)
 
 if __name__ == '__main__':
-    main(_Subscribers)
+    main(_Mailshot)

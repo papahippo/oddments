@@ -10,6 +10,17 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from email.mime.base import MIMEBase
+import mimetypes
+import email.utils
+from email.header import Header
+
+from phileas import _html40 as h
+
+MagicMailTreeName = 'MagicMailTree'
+# ok_exts = ('.pdf', '.jpg', '.jpeg')
+
+def putmsg(*pp, **kw):
+    print(*pp, **kw, file=sys.stderr)
 
 class _Subscribers:
     """
@@ -25,18 +36,10 @@ class _Subscribers:
     )
     sign_off_icon = "/home/gill/MEW_Archive/music_318-73071_vsmall.jpg"
     what_goes_to_whom = (
-        ('tmp',  'hippos@chello.nl', r'test42'),
+        #('tmp',  'hippos@chello.nl', r'test42'),
+        ('tmp', 'hippostech@gmail.com', r'test42'),
     )
 
-# For guessing MIME type based on file name extension
-import mimetypes
-import email.utils
-from email.header import Header
-
-from phileas import _html40 as h
-
-MagicMailTreeName = 'MagicMailTree'
-# ok_exts = ('.pdf', '.jpg', '.jpeg')
 
 def gather(list_of_name_tuples, upper_dir):
     for simple_name in os.listdir(upper_dir):
@@ -47,31 +50,38 @@ def gather(list_of_name_tuples, upper_dir):
             list_of_name_tuples.append((simple_name, longer_name))
 
 
-def main(subscribers):
+def main(Subscribers_class):
+    subscribers = Subscribers_class()
     script_filename = sys.argv.pop(0)
     script_shortname = os.path.split(script_filename)[1]
-    ok_commands = ('take', 'check', 'send', 'quit')
-    command = (sys.argv and sys.argv.pop(0)) or 'check'
+    ok_commands = ('show', 'take', 'check', 'send', 'quit')
+    command = (sys.argv and sys.argv.pop(0))
+    if sys.stdout.isatty():
+        if not command:
+            command = 'check'
+    else:
+        print ("Content-type: text/html;charset=UTF-8\n\n") # the blank line really matters!
+        command = 'show'
     if command not in ok_commands:
-        print("error: %s is not one of %s." %(command, ok_commands))
+        putmsg("error: %s is not one of %s." %(command, ok_commands))
         sys.exit(999)
     cwd = os.getcwd()
     path_elements = cwd.split(os.sep)
     mailing_id = path_elements.pop()
     if path_elements.pop() != MagicMailTreeName:
-        print("warning: %s is not within a '%s' directory." %(mailing_id, MagicMailTreeName))
+        putmsg("warning: %s is not within a '%s' directory." %(mailing_id, MagicMailTreeName))
         # sys.exit(997)
 
     if command not in ('take',):
         dir_to_take_from = None
     else:
         if not sys.argv:
-            print("error: take requires directory argument.")
+            putmsg("error: take requires directory argument.")
             sys.exit(998)
         dir_to_take_from = sys.argv.pop()
         files_to_take = []
         gather(files_to_take, dir_to_take_from)
-        print('\n'.join([str(t) for t in files_to_take]))
+        putmsg('\n'.join([str(t) for t in files_to_take]))
 
     # identify all possible attachments once only, before checking per-user.
     #
@@ -81,38 +91,38 @@ def main(subscribers):
         try:
             files_to_attach = os.listdir(name)
         except FileNotFoundError:
-            print ("warning: no subdirectory for instrument group '%s' " % name)
+            putmsg ("warning: no subdirectory for instrument group '%s' " % name)
             files_to_attach = None
 
         if dir_to_take_from:
 # command 'take'
             if files_to_attach is None:
-                print("creating subdirectory for instrument group '%s' " % name)
+                putmsg("creating subdirectory for instrument group '%s' " % name)
                 os.mkdir(name)
             if files_to_attach:
-                print("%u files/links are already present for instrument group '%s': %s"
+                putmsg("%u files/links are already present for instrument group '%s': %s"
                        % ( len(files_to_attach), name, files_to_attach))
             instrument_cre = re.compile(instrument_re)
             for simple_name, longer_name in files_to_take:
                 if not instrument_cre.search(simple_name.lower()):
                     continue
-                print("putting symbolic link  to '%s' in subdirectory '%s'"
+                putmsg("putting symbolic link  to '%s' in subdirectory '%s'"
                           % (simple_name, name))
                 try:
                     os.symlink(longer_name,
                            name + os.sep + simple_name)
                 except FileExistsError:
-                    print ("warning: '%s' already exists in '%s' and will NOT be overwritten!"
+                    putmsg ("warning: '%s' already exists in '%s' and will NOT be overwritten!"
                            %(simple_name, name))
             continue # that's all for take command!
 # command 'check' or 'send'
         if not files_to_attach:
             # message below can get in the way, so maybe suppress it?:
-            print("I found nothing to attach so will not send mail at all to '%s'" % name)
+            putmsg("I found nothing to attach so will not send mail at all to '%s'" % name)
             continue
         if not email_addr:
-            print ("We have no email address for %s."  % name)
-            print ("perhaps you need to print the above would-be attachments?")
+            putmsg ("We have no email address for %s."  % name)
+            putmsg ("perhaps you need to putmsg the above would-be attachments?")
             continue
         # Create message container - the correct MIME type is multipart/alternative.
         msg = MIMEMultipart()
@@ -123,11 +133,11 @@ def main(subscribers):
             sender = subscribers.sender
         except AttributeError:
             sender = "Gill and Larry Myerscough"
-        print('preparing mail for intrument (group) "%s"' % name)
-        print('    mail subject will be "%s"' % subject)
-        print('    mail will appear to come from "%s"' % sender)
-        print('    mail recipient(s) will be "%s"' % email_addr)
-        print('    mail attachment(s) will be ...\n%s' % file_list)
+        putmsg('preparing mail for intrument (group) "%s"' % name)
+        putmsg('    mail subject will be "%s"' % subject)
+        putmsg('    mail will appear to come from "%s"' % sender)
+        putmsg('    mail recipient(s) will be "%s"' % email_addr)
+        putmsg('    mail attachment(s) will be ...\n%s' % file_list)
         message_id_string = None
         msg['From'] = email.utils.formataddr((str(Header(sender, 'utf-8')), 'hippos@chello.nl'))
         msg['Subject'] = subject
@@ -203,22 +213,15 @@ def main(subscribers):
             encoders.encode_base64(part)
             part.add_header('Content-Disposition', 'attachment', filename=os.path.basename(rel_name))
             msg.attach(part)
-        print ("length of message is %u bytes" % len(bytes(msg)))
-        if command in ('q', 'quit'):
+        putmsg ("length of message is %u bytes" % len(bytes(msg)))
+        if command in ('show',):
+            print(str(html_layout))
+        elif command in ('q', 'quit'):
             sys.exit(0)
-        if command in ('s', 'send',): # 'send' in sys.argv:
+        elif command in ('s', 'send',): # 'send' in sys.argv:
             with smtplib.SMTP('smtp.upcmail.nl') as s:
                 s.send_message(msg)
-                print ("mail has been sent to '%s'." % email_addr)
+                putmsg ("mail has been sent to '%s'." % email_addr)
 
 if __name__ == '__main__':
-    try:
-        sys.path.insert(0, '')
-        from subscribers import Subscribers
-        sys.path.pop(0)
-    except ImportError:
-        print("Can't import subscribers module; did you forget to copy 'subscribers.py' to '%s'"
-              "\n or are you in not in the per-mailing directory?" % os.getcwd())
-        print ("using dummy settings!")
-        Subscribers = _Subscribers
-    main(Subscribers)
+    main(_Subscribers)

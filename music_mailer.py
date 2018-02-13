@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
-import sys, os, re
-import smtplib
+import sys, os, re, time, smtplib
 
 from email import encoders
 from email.mime.multipart import MIMEMultipart
@@ -11,7 +10,8 @@ from email.mime.base import MIMEBase
 
 # For guessing MIME type based on file name extension
 import mimetypes
-from email.utils import make_msgid
+import email.utils
+from email.header import Header
 
 from phileas import _html40 as h
 
@@ -107,13 +107,22 @@ def main():
         subject = subscribers.title.format(**locals())
         files_to_attach.sort()
         file_list = ",\n".join(['      %s' %filename for filename in files_to_attach])
+        try:
+            sender = subscribers.sender
+        except AttributeError:
+            subscribers.sender = sender = "Gill and Larry Myerscough"
         print('preparing mail for intrument (group) "%s"' % name)
         print('    mail subject will be "%s"' % subject)
+        print('    mail will appear to come from "%s"' % sender)
         print('    mail recipient(s) will be "%s"' % email_addr)
         print('    mail attachment(s) will be ...\n%s' % file_list)
+        message_id_string = None
+        msg['From'] = email.utils.formataddr((str(Header(sender, 'utf-8')), 'hippos@chello.nl'))
         msg['Subject'] = subject
         msg['To'] = email_addr
-        msg['From'] = 'hippos@chello.nl'
+        utc_from_epoch = time.time()
+        msg['Date'] = email.utils.formatdate(utc_from_epoch, localtime=True)
+        msg['Messsage-Id'] = email.utils.make_msgid(message_id_string)
         msg.preamble = 'You will not see this in a MIME-aware mail reader.\n'
 
         textual_part = MIMEMultipart('alternative')
@@ -126,7 +135,7 @@ def main():
                   )
 # prepare the HTML version of the message body
 # note that we need to peel the <> off the msgid for use in the html.
-        icon_content_id = make_msgid()
+        icon_content_id = email.utils.make_msgid()
         html_layout = str(
             h.html | ("\n",
                 h.head | (

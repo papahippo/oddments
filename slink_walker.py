@@ -1,10 +1,11 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
+
 import sys, os, re
 
-import walker
+from walker import Walker
 
-class SLinkWalker(walker.Walker):
+class SLinkWalker(Walker):
 
     name_ =  "symbolic walker/fixer"
 
@@ -14,7 +15,10 @@ class SLinkWalker(walker.Walker):
             return
         source = os.readlink(self.composite_pathname)
         self.vprint (1, "%s is a symbolic link to %s" % (self.composite_pathname, source))
-        relative_path =  os.path.relpath(source, start=root_)
+        if not os.path.isabs(source):
+            self.vprint(1, "this is already a good relative path, so will be left alone.")
+            return
+        relative_path = os.path.relpath(source, start=root_)
         #abs_link_location = os.path.abspath(self.composite_pathname)
         print ("equivalent relative path from %s is %s" % (root_, relative_path))
         os.remove(self.composite_pathname)

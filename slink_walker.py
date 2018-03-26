@@ -1,10 +1,10 @@
 #!/usr/bin/python3
+# -*- coding: utf-8 -*-
 import sys, os, re
-from subprocess import Popen, PIPE, TimeoutExpired, call, check_output
 
-from walker import Walker, main
+import walker
 
-class SLinkWalker(Walker):
+class SLinkWalker(walker.Walker):
 
     name_ =  "symbolic walker/fixer"
 
@@ -22,4 +22,4 @@ class SLinkWalker(Walker):
 
 
 if __name__ == '__main__':
-    main(SLinkWalker)
+    SLinkWalker().main()

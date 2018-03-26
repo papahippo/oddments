@@ -1,13 +1,14 @@
 #!/usr/bin/python3
-" dive into music archive and perform maintenance or analyis or report tasks on all files"
+# -*- coding: utf-8 -*-
+" dive into music archive and perform maintenance or analyis or report tasks on all PDFs"
 import sys, os, re
-from subprocess import Popen, PIPE, TimeoutExpired, call, check_output
+from subprocess import Popen, PIPE, TimeoutExpired, call
 
-from walker import Walker, main
+from walker import Walker
 
 class PdfWalker(Walker):
 
-    name_ =  "PDF walker/fixer"
+    name_ = "PDF walker/fixer"
     ps_filename = '/tmp/pdf_fix.ps'
     tmp_pdf_filename = '/tmp/pdf_fix.pdf'
 
@@ -20,14 +21,14 @@ class PdfWalker(Walker):
             outs, errs = proc.communicate()
         out_lines = outs.decode(sys.stdout.encoding).split('\n')
         err_lines = errs.decode(sys.stderr.encoding).split('\n')
-        if 0: # err_lines:
+        if 0 or err_lines:  # disabled, not sure why!?
             print("(buggy old?) pdfimages gave errors on %s" % self.shl_pathname)
             return None
         if len(out_lines)<2:
             self.vprint(1, "not a proper PDF? %s" % self.shl_pathname)
             return None  # => no images
         headings = re.split(r'\s+', out_lines.pop(0))
-        _hyphens = out_lines.pop(0)
+        out_lines.pop(0)  # skip line with just hyphens
         if not out_lines:
             self.vprint(1, "no images in %s" % self.shl_pathname)
             return None  # => no images
@@ -65,4 +66,4 @@ class PdfWalker(Walker):
 
 
 if __name__ == '__main__':
-    main(PdfWalker)
+    PdfWalker().main()

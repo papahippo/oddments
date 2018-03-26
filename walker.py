@@ -1,14 +1,11 @@
 #!/usr/bin/python3
-" dive into music archive and perform maintenance or analyis or report tasks on all files"
+# -*- coding: utf-8 -*-
+""" dive into archive and perform maintenance or analysis or report tasks on all files"""
 import sys, os, shlex
-from phileas import _html40 as h
+
 
 class Walker:
-    name_ =  "dummy walker"
-
-    def __init__(self, prog_path, verbosity=0):
-        self.verbosity = verbosity
-        self.vprint(1, "running", prog_path)
+    name_ = "dummy walker"
 
     def vprint(self, this_verbosity, *pp, **kw):
         if self.verbosity >= this_verbosity:
@@ -31,15 +28,15 @@ class Walker:
                 for item_ in items_:
                     self.handle_item(root_, item_, isdir_)
 
-def main(class_):
-    print (os.getcwd())
-    prog_path = sys.argv.pop(0)
-    verbosity = sum([a in ('-v', '--verbose') for a in sys.argv])
-    targets = [arg for arg in sys.argv if not arg.startswith('-')] or '.'
-    instance_ = class_(prog_path, verbosity=verbosity)
-    for target in targets:
-        instance_.walk(target)
+    def main(self):
+        #print (os.getcwd())
+        prog_path = sys.argv.pop(0)
+        self.verbosity = sum([a in ('-v', '--verbose') for a in sys.argv])
+        targets = [arg for arg in sys.argv if not arg.startswith('-')] or '.'
+        self.vprint(1, "running", prog_path)
+        for target in targets:
+            self.walk(target)
 
 
 if __name__ == '__main__':
-    main(Walker)  # our class is both a base class and a dummy class
+    Walker().main()  # our class is both a base class and a dummy class

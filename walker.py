@@ -25,6 +25,11 @@ class Walker:
         return False
 
     def walk(self, target):
+        if not os.path.isdir(target):
+            self.vprint(1, "processing explicit filename:", target)
+            self.handle_item(os.getcwd(), target, False)
+            return
+
         self.vprint(1, "walking through target:", target)
         for root_, dirs_, files_ in os.walk(target):
             for items_, isdir_ in ((dirs_, True), (files_, False),):

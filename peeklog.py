@@ -16,7 +16,8 @@ class EyeSDNFile:
         print(name)
 
     def our_number_dialled(self, body, name):
-        print(*[(i, hex(b)) for (i, b) in enumerate(body)]) # , sep='\n')
+        #print(*[(i, hex(b)) for (i, b) in enumerate(body)]) # , sep='\n')
+        print([(i, hex(b)) for (i, b) in enumerate(body)]) # , sep='\n')
         iStart = 20
         iEnd = int(body[17]) + 18
         # can't explain or logically deduce location of called number,but this seems to work:
@@ -32,8 +33,9 @@ class EyeSDNFile:
         print(subject)
         if self.dither_count:
             print("must send mail!")
-            sendMail(recipients = ['hippos@chello.nl', 'g.m.myerscough@gmail.com'],
-                     subject=subject)
+            sendMail(send_from='hippos@chello.nl', send_to= ['hippos@chello.nl', 'g.m.myerscough@gmail.com'],
+                     subject=subject, text="(stub of msg text from 'peeklog'",
+                     server='smtp.upcmail.nl')
         else:
             print("old cow - no need to send mail.")
 
@@ -61,6 +63,7 @@ class EyeSDNFile:
     def read_packet(self):
         while 1:
             i = self.carry_bytes.find(0xff)
+            #i = self.carry_bytes.find(chr(0xff))
             # print ("index of 0xff =", i)
             if i >= 0:
                 packet = self.carry_bytes[:i]
@@ -85,6 +88,8 @@ class EyeSDNFile:
         if packet ==self.tell_tale_bytes:
             return None
         head = bytes([0]) + packet[:12]  # prefix null byte to facilitate unpacking
+        #head = '\x00' + packet[:12]  # prefix null byte to facilitate unpacking
+        # print (len(head), head)
         usecs, secs, origin, length = struct.unpack('>LxLxbH', head)
         local_time_then = time.localtime(secs)
         body = packet[12:]

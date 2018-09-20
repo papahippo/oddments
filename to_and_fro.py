@@ -17,7 +17,7 @@ def to_and_fro(ss):
     'sort' a sequence (e.g. a list) of strings by taking 1st, then last,
     then 2nd, then last-but-one and so on.
     """
-    # The following statement is arguably unnecesary but has two advantages:
+    # The following statement is arguably unnecessary but has two advantages:
     # 1. It ensures that the function still works if e.g. a tuple is passed
     #    rather than a list; we need to be able to 'pop' elements.
     # 2. It avoids destroying the caller's list. The caller could work around
@@ -66,5 +66,3 @@ if __name__ == '__main__':
                                   (sorted_seq, "to_and_fro sorted")):
                 print ("\n  %s" % when)
                 print ("\n".join(which))
-
-        

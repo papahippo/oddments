@@ -1,6 +1,9 @@
 #!/usr/bin/python3
 """
-WARNING: temporarily(?) dicontinuing the ctypes approach; se 'pymisdn.py'.
+My ISDN work has stopped for good, now that even I don't use it at home anymore - and it's
+going to be obsolete soon. This code is retained for... no good reason(?)
+
+WARNING: temporarily(?) dicontinuing the ctypes approach; see 'pymisdn.py'.
 I'm incubating my python isdn monitor stuff here.. I'll move it toits own project if it reallly gets going!
 This project is stalled because of problems binding tosocket of family AF_ISDN. The python scoket library
 only seems to like AF_INET and AF_INET6.

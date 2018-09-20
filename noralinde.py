@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-'Game' to help learning of drama texts.
+'Game' to help learning of drama texts. This is an early experimental/stub version. The full version
+is not 'open source' so is kept elsewhere.
 """
 import random
 class Play:

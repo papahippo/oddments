@@ -39,6 +39,12 @@ class QtCapture(QtGui.QWidget):
         super(QtGui.QWidget, self).deleteLater()
 
 
+    def keyPressEvent(self, e):
+        print(e)e
+        if e.key() == QtCore.Qt.Key_Escape:
+            self.close()
+
+
 class ControlWindow(QtGui.QWidget):
     def __init__(self):
         QtGui.QWidget.__init__(self)

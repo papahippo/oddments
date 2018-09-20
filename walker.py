@@ -32,6 +32,10 @@ class Walker:
             for items_, isdir_ in ((dirs_, True), (files_, False),):
                 for item_ in items_:
                     self.handle_item(root_, item_, isdir_)
+        self.cleanup(root_)
+
+    def cleanup(self, root):
+        pass
 
     def main(self):
         #print (os.getcwd())

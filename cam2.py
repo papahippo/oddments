@@ -40,9 +40,12 @@ class QtCapture(QtGui.QWidget):
 
 
     def keyPressEvent(self, e):
-        print(e)e
         if e.key() == QtCore.Qt.Key_Escape:
             self.close()
+        elif e.key() == 0x10000fa:
+            print('click!')
+        else:
+            print('ignoring key...', hex(e.key()))
 
 
 class ControlWindow(QtGui.QWidget):

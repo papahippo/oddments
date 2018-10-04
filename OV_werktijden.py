@@ -7,7 +7,6 @@ import sys, os, csv, datetime
 
 class Csv:
     def absorb(cls, fn):
-        print (cls)
         with open(fn, 'r') as csvfile:
             csv_reader = csv.reader(csvfile, delimiter=';')
             field_names = csv_reader.__next__()
@@ -19,9 +18,13 @@ class Csv:
                 instance.previous = previous
                 for an, av in zip(attr_names, row):
                     instance.__setattr__(an, av)
-                instance.intake()
+                cls.postprocess(instance.intake())
                 previous = instance
     absorb = classmethod(absorb)
+
+    def postprocess(cls, instance):
+        return
+    postprocess = classmethod(postprocess)
 
     def main(cls, fn):
         cls.absorb(fn)
@@ -32,6 +35,23 @@ class Csv:
 
 
 class OvCsv(Csv):
+    last_week_number = -1  # impossible
+
+    def postprocess(cls, instance):
+        if not instance:
+            return
+        this_week_number = instance.datetime_out.isocalendar()[1]
+        if cls.last_week_number != this_week_number:
+            cls.cumulative_this_week = datetime.timedelta()
+            cls.last_week_number = this_week_number
+            print ("------------"*4)
+        print (instance.datetime_out.strftime("%d-%m-%Y (%A)"), "time worked = %s = %.1f hours" %
+               (str(instance.time_worked)[:-3], instance.time_worked.total_seconds() / 3600))
+        cls.cumulative_this_week = cls.cumulative_this_week + instance.time_worked
+        print ("week %d cumulative = %s = %.1f hours" % (this_week_number, str(cls.cumulative_this_week)[:-3],
+                                                         cls.cumulative_this_week.total_seconds() / 3600))
+    postprocess = classmethod(postprocess)
+
 
     def intake(self):
         # print(self._datum, end=' ... ')
@@ -43,9 +63,16 @@ class OvCsv(Csv):
             and (self._transactie == "Check-in")
         ):
             return None
-        print (self._datum, self.previous._check_uit, self._check_in)
-        datetime_out = datetime.datetime.strptime(self.previous._datum + '+' + self.previous._check_uit,
-                                                  '%d-%m-%Y+%H:%M')
+        # print (self._datum, self.previous._check_uit, self._check_in)
+        self.datetime_out, datetime_back_in = [ datetime.datetime.strptime(date_s + '+' + time_s, '%d-%m-%Y+%H:%M')
+                                           for date_s, time_s in ((self.previous._datum, self.previous._check_uit),
+                                                                  (self._datum, self._check_in))]
+        time_at_dest = datetime_back_in - self.datetime_out
+        #print ("time at dest =", time_at_dest)
+        self.time_worked = time_at_dest - datetime.timedelta(minutes=50)
+        if self.time_worked <= datetime.timedelta():
+            return None # quick fix for bug not looked at yet!
+        return self
 
 class OVcsvOct2018(OvCsv):
     werkLocatie = "Geldermalsen"

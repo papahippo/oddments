@@ -1,3 +1,6 @@
+oddments
+=
+
 This is a collection of 'oddments'. pieces of python code that I have made in answer to questions on-line or to
 perform ad hoc tasks for which I couldn't find an existing (linux) solution.
 

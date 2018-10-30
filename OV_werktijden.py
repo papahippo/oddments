@@ -35,21 +35,29 @@ class Csv:
 
 
 class OvCsv(Csv):
+    max_per_day = 8.0
     last_week_number = -1  # impossible
+    held_over = 0.0
+    period_cumulative = 0.0
 
     def postprocess(cls, instance):
         if not instance:
             return
         this_week_number = instance.datetime_out.isocalendar()[1]
         if cls.last_week_number != this_week_number:
-            cls.cumulative_this_week = datetime.timedelta()
+            cls.cumulative_this_week = 0.0
             cls.last_week_number = this_week_number
             print ("------------"*4)
-        print (instance.datetime_out.strftime("%d-%m-%Y (%A)"), "time worked = %s = %.1f hours" %
-               (str(instance.time_worked)[:-3], instance.time_worked.total_seconds() / 3600))
-        cls.cumulative_this_week = cls.cumulative_this_week + instance.time_worked
-        print ("week %d cumulative = %s = %.1f hours" % (this_week_number, str(cls.cumulative_this_week)[:-3],
-                                                         cls.cumulative_this_week.total_seconds() / 3600))
+        hours_worked = instance.time_worked.total_seconds() / 3600
+        bookable_raw = hours_worked + cls.held_over
+        bookable_smooth = min(bookable_raw - (bookable_raw % 0.25), cls.max_per_day)
+        cls.held_over = bookable_raw - bookable_smooth
+        print (instance.datetime_out.strftime("%d-%m-%Y (%A)"), "time worked = %s = %.2f hours, bookable hours=%.2f" %
+               (str(instance.time_worked)[:-3], hours_worked, bookable_smooth))
+        cls.cumulative_this_week += bookable_smooth
+        cls.period_cumulative += bookable_smooth
+        print ("week %d cumulative = %.2f hours , preiod cumulative = %.2f hours" %
+               (this_week_number, cls.cumulative_this_week, cls.period_cumulative))
     postprocess = classmethod(postprocess)
 
 
@@ -79,4 +87,4 @@ class OVcsvOct2018(OvCsv):
 
 
 if __name__ == '__main__':
-    OVcsvOct2018.main('/home/gill/Hippos/_2018/Acco2018/Q3/transacties_04102018123951.csv')
+    OVcsvOct2018.main('/home/gill/Hippos/_2018/Acco2018/Q4/transacties_21102018173354.csv')

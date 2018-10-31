@@ -87,4 +87,4 @@ class OVcsvOct2018(OvCsv):
 
 
 if __name__ == '__main__':
-    OVcsvOct2018.main('/home/gill/Hippos/_2018/Acco2018/Q4/transacties_21102018173354.csv')
+    OVcsvOct2018.main('/home/gill/Hippos/_2018/Acco2018/Q4/transacties_30102018215958.csv')

@@ -39,6 +39,8 @@ class OvCsv(Csv):
     last_week_number = -1  # impossible
     held_over = 0.0
     period_cumulative = 0.0
+    werkStations =  {}
+    lunchMinutes = 30
 
     def postprocess(cls, instance):
         if not instance:
@@ -63,11 +65,13 @@ class OvCsv(Csv):
 
     def intake(self):
         # print(self._datum, end=' ... ')
+        arriveMinutes = self.previous and self.werkStations.get(self.previous._bestemming)
+        departMinutes = self.werkStations.get(self._vertrek)
         if not (
             (self.previous is not None)
-            and (self.previous._bestemming == self.werkLocatie)
+            and arriveMinutes
             and (self.previous._transactie == "Check-uit")
-            and (self._vertrek == self.werkLocatie)
+            and departMinutes
             and (self._transactie == "Check-in")
         ):
             return None
@@ -76,15 +80,15 @@ class OvCsv(Csv):
                                            for date_s, time_s in ((self.previous._datum, self.previous._check_uit),
                                                                   (self._datum, self._check_in))]
         time_at_dest = datetime_back_in - self.datetime_out
-        #print ("time at dest =", time_at_dest)
-        self.time_worked = time_at_dest - datetime.timedelta(minutes=50)
+        # print ("time at dest, arriveMinutes, departMinutes  =", time_at_dest, arriveMinutes, departMinutes)
+        self.time_worked = time_at_dest - datetime.timedelta(minutes=(self.lunchMinutes + arriveMinutes + departMinutes))
         if self.time_worked <= datetime.timedelta():
             return None # quick fix for bug not looked at yet!
         return self
 
 class OVcsvOct2018(OvCsv):
-    werkLocatie = "Geldermalsen"
+    werkStations =  {"Geldermalsen": 10, "'s-Hertogenbosch": 34}
 
 
 if __name__ == '__main__':
-    OVcsvOct2018.main('/home/gill/Hippos/_2018/Acco2018/Q4/transacties_30102018215958.csv')
+    OVcsvOct2018.main('/home/gill/Hippos/_2018/Acco2018/Q4/transacties_02122018170844.csv')

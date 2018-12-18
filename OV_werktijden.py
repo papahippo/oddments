@@ -86,9 +86,9 @@ class OvCsv(Csv):
             return None # quick fix for bug not looked at yet!
         return self
 
-class OVcsvOct2018(OvCsv):
+class OVcsvDec2018(OvCsv):
     werkStations =  {"Geldermalsen": 10, "'s-Hertogenbosch": 34}
 
 
 if __name__ == '__main__':
-    OVcsvOct2018.main('/home/gill/Hippos/_2018/Acco2018/Q4/transacties_02122018170844.csv')
+    OVcsvDec2018.main('/home/gill/Hippos/_2018/Acco2018/Q4/transacties_18122018213743.csv')

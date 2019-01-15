@@ -19,12 +19,21 @@ class PDF_Bundle:
         ('Horn_in_F_1', 2),
         ('Horn_in_F_2', 2),
         ('Horn_in_F_2-x', 2),
-        ('Horn_in_F_2-y', 2),
         ('Trumpet_1', 2),
         ('Trumpet_2', 2),
         ('Trumpet_3', 2),
         ('Trombone_1', 2),
-        ('Trombone_1', 2),
+        ('Trombone_2', 2),
+        ('Trombone_3', 2),
+        ('Baritone', 2),
+        ('Euphonium_BC', 2),
+        ('Euphonium_TC', 2),
+        ('Bass_in_Eb', 2),
+        ('Bass_in_Bb', 2),
+        ('Percussion_1', 2),
+        ('Percussion_2', 2),
+        ('Timpani', 2),
+        ('Mallets', 2),
 
     ]
     def main(self):

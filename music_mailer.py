@@ -16,6 +16,11 @@ from email.header import Header
 from phileas import _html40 as h
 
 MagicMailTreeName = 'MagicMailTree'
+
+# SMTP_server = 'smtp.upcmail.nl'
+# SMTP_server = 'smtp.gmail.com'
+SMTP_server = 'smtp.kpnmail.nl'
+
 # ok_exts = ('.pdf', '.jpg', '.jpeg')
 
 def gather(list_of_name_tuples, upper_dir):
@@ -107,17 +112,14 @@ def main():
         subject = subscribers.title.format(**locals())
         files_to_attach.sort()
         file_list = ",\n".join(['      %s' %filename for filename in files_to_attach])
-        try:
-            sender = subscribers.sender
-        except AttributeError:
-            subscribers.sender = sender = "Gill and Larry Myerscough"
         print('preparing mail for intrument (group) "%s"' % name)
         print('    mail subject will be "%s"' % subject)
-        print('    mail will appear to come from "%s"' % sender)
+        print('    mail will appear to come from "%s<%s>"' % (subscribers.sender_name, subscribers.sender_address))
         print('    mail recipient(s) will be "%s"' % email_addr)
         print('    mail attachment(s) will be ...\n%s' % file_list)
         message_id_string = None
-        msg['From'] = email.utils.formataddr((str(Header(sender, 'utf-8')), 'hippos@chello.nl'))
+        msg['From'] = email.utils.formataddr((str(Header(subscribers.sender_name, 'utf-8')), subscribers.sender_address))
+        msg['Reply-to'] = email.utils.formataddr((str(Header(subscribers.reply_to_name, 'utf-8')), subscribers.reply_to_address))
         msg['Subject'] = subject
         msg['To'] = email_addr
         utc_from_epoch = time.time()
@@ -143,7 +145,7 @@ def main():
                 h.body | (
                     h.p | subscribers.salutation,
                     h.p | subscribers.pre_text,
-                    h.p | ([(name, h.br) for name in files_to_attach]),
+                    h.p | (h.small | ([(name, h.br) for name in files_to_attach])),
                     h.p | (h.img(src="cid:%s" % icon_content_id[1:-1]), subscribers.sign_off),
                     h.p | (h.em | (h.small |subscribers.post_text)),
                       )
@@ -195,7 +197,7 @@ def main():
         if command in ('q', 'quit'):
             sys.exit(0)
         if command in ('s', 'send',): # 'send' in sys.argv:
-            with smtplib.SMTP('smtp.upcmail.nl') as s:
+            with smtplib.SMTP(subscribers.SMTP_server) as s:
                 s.send_message(msg)
                 print ("mail has been sent to '%s'." % email_addr)
 

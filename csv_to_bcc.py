@@ -38,24 +38,34 @@ class Csv:
     def intake(self):
         return self
 
-class CsvToBcc(Csv):
-    bccList = []
+class CsvToBccVodawiko(Csv):
+
+    csv_headers = (
+"First Name,Last Name,Display Name,Nickname,Primary Email,Secondary Email,Screen Name,"
+"Work Phone,Home Phone,Fax Number,Pager Number,Mobile Number,"
+"Home Address,Home Address 2,Home City,Home County,Home Post Code,Home Country,"
+"Work Address,Work Address 2,Work City,Work County,Work Post Code,Work Country,"
+"Job Title,Department,Organisation,Web Page 1,Web Page 2,"
+"Birth Year,Birth Month,Birth Day,Custom 1,Custom 2,Custom 3,Custom 4,Notes,"
+    )
+
+    @classmethod
+    def main(cls, fn):
+        with open('/home/gill/Vodawiko/Vodawiko_leden.csv', 'w') as cls.csvOut:
+            print(cls.csv_headers, file=cls.csvOut)
+            cls.absorb(fn)
 
     @classmethod
     def postprocess(cls, self):
         if not self._email:
             print("warning: no email address for '%s'" % self._name)
-            return
-        cls.bccList.append('<%s>%s' % (self._name, self._email))
+        print(','*2 + self._name + ','*2 + self._email + ','*4 + self._phone + ','*5
+              + self._address +','*2 + ','+ self._gemeente + ',' + self._postcode  +
+              ','*19,
+              file=cls.csvOut)
 
-    @classmethod
-    def main(cls, fn):
-        cls.absorb(fn)
-        #print('Bcc:' + ','.join(cls.bccList))
-
-
-class CsvToBccRuby(CsvToBcc):
+class CsvToBccVodawiko2019(CsvToBccVodawiko):
     pass
 
 if __name__ == '__main__':
-    CsvToBccRuby.main('/home/gill/Vodawiko/ledenlijst01-01-2019-rest.csv')
+    CsvToBccVodawiko2019().main('/home/gill/Vodawiko/ledenlijst01-01-2019-bare.csv')

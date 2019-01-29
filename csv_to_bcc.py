@@ -49,6 +49,10 @@ class CsvToBccVodawiko(Csv):
 "Birth Year,Birth Month,Birth Day,Custom 1,Custom 2,Custom 3,Custom 4,Notes,"
     )
 
+
+    @classmethod
+    def put_headers(cls):
+        pass
     @classmethod
     def main(cls, fn):
         with open('/home/gill/Vodawiko/Vodawiko_leden.csv', 'w') as cls.csvOut:
@@ -59,9 +63,10 @@ class CsvToBccVodawiko(Csv):
     def postprocess(cls, self):
         if not self._email:
             print("warning: no email address for '%s'" % self._name)
-        print(','*2 + self._name + ','*2 + self._email + ','*4 + self._phone + ','*5
-              + self._address +','*2 + ','+ self._gemeente + ',' + self._postcode  +
-              ','*19,
+        dob = self._dob
+        print(','*2 + self._name + ','*2 + self._email + ','*4 + self._phone + ','*4
+              + self._address +','*2 + ','+ self._gemeente + ','*2 + self._postcode  +
+              ','*12 + '19'+ dob[-2:] + ',' + dob[3:5] + ',' + dob[0:2] + ','*5,
               file=cls.csvOut)
 
 class CsvToBccVodawiko2019(CsvToBccVodawiko):

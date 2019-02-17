@@ -2,7 +2,8 @@
 import sys,os
 from os import listdir
 from os.path import isfile, join
-
+#Note to self: maybe I shouldd rework this to use my 'Walker'
+#  class
 print("running '%s' to convert lots of scanned PDFs from 'top-half-A4-portrait' to A4 landscape." % sys.argv.pop(0))
 mypath = (sys.argv and sys.argv.pop(0)) or './'
 onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]

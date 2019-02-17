@@ -60,8 +60,6 @@ class OvCsv(Csv):
         cls.period_cumulative += bookable_smooth
         print ("week %d cumulative = %.2f hours , preiod cumulative = %.2f hours" %
                (this_week_number, cls.cumulative_this_week, cls.period_cumulative))
-    postprocess = classmethod(postprocess)
-
 
     def intake(self):
         # print(self._datum, end=' ... ')

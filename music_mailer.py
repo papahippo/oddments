@@ -146,12 +146,13 @@ def main():
                     h.p | subscribers.salutation,
                     h.p | subscribers.pre_text,
                     h.p | (h.small | ([(name, h.br) for name in files_to_attach])),
+                    h.p | getattr(subscribers, "mid_text", ''),
                     h.p | (h.img(src="cid:%s" % icon_content_id[1:-1]), subscribers.sign_off),
                     h.p | (h.em | (h.small |subscribers.post_text)),
                       )
             )
         )
-
+        # print ("<<<", html_layout, ">>>")
         # Prepare both parts and insert them into the message container.
         # According to RFC 2046, the last part of a multipart message, in this case
         # the HTML message, is best and preferred.

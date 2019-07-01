@@ -6,6 +6,7 @@ import sys, os, shlex
 
 class Walker:
     name_ = "dummy walker"
+    verbosity = recurse = 0
 
     def vprint(self, this_verbosity, *pp, **kw):
         if self.verbosity >= this_verbosity:
@@ -19,6 +20,7 @@ class Walker:
         self.vprint(2, self.name_, 'isdir=%u' % is_dir, root_, item_name)
         self.composite_pathname = os.path.join(root_, item_name)
         self.shl_pathname = shlex.quote(self.composite_pathname)
+        os.system("ls -l %s" % os.path.normpath(self.shl_pathname))
         return False
 
     def walk(self, target):
@@ -40,7 +42,18 @@ class Walker:
     def main(self):
         #print (os.getcwd())
         prog_path = sys.argv.pop(0)
-        self.verbosity = sum([a in ('-v', '--verbose') for a in sys.argv])
+        while sys.argv and sys.argv[0].startswith('-'):
+            a = sys.argv.pop(0)
+            if a in ('-v', '--verbose'):
+                self.verbosity += 1
+                continue
+            # making recursion optional and not the default is a "to do .. maybe" action!
+            #elif a in('-r', '--recurse'):
+            #    self.recurse = 1
+            #    continue
+            else:
+                print ("keyword '%s' not understood." % a)
+                sys.exit(991)
         targets = [arg for arg in sys.argv if not arg.startswith('-')] or '.'
         self.vprint(1, "running", prog_path)
         for target in targets:

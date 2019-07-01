@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 """
 This is really a branch of music_mailer.py.... and would be handled as such if I were
-just a bt more competent and conident with git!
+just a bt more competent and confident with git!
 """
 import sys, os, re
 import smtplib

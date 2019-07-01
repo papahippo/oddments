@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 """
 quickie (I hope!) based on earlier csv stuff. The goal is to
-generate a bcc list of email addresses frm a csv file.
+generate a bcc list of email addresses from a csv file.
 """
 import sys, os, csv, datetime
 

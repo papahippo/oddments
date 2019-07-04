@@ -11,6 +11,17 @@ class PdfWalker(Walker):
     name_ = "PDF walker/fixer"
     ps_filename = '/tmp/pdf_fix.ps'
     tmp_pdf_filename = '/tmp/pdf_fix.pdf'
+    fix = 0
+
+    def process_keyword_arg(self, a):
+        if a in ('-f', '--fix'):
+            self.fix += 1
+            return
+        # making recursion optional and not the default is a "to do .. maybe" action!
+        # elif a in('-r', '--recurse'):
+        #    self.recurse = 1
+        #    continue
+        Walker.process_keyword_arg(self, a)
 
     def check_images(self, effort):
         proc = Popen("pdfimages -list %s" % self.shl_pathname, stdout=PIPE, stderr=PIPE, shell=True, close_fds=True)
@@ -42,11 +53,15 @@ class PdfWalker(Walker):
             self.vprint(3, "field['object']", field['object'])
             if field['object']=='[inline]':  # or field['enc']!='ccitt':
                 self.vprint(1, "%s contains in-line or not ccitt-encoded image(s)" % self.shl_pathname)
+                if not self.fix:
+                    continue
                 call("pdf2ps %s %s" % (self.shl_pathname, self.ps_filename), shell=True)
                 call("ps2pdf %s %s" % (self.ps_filename, self.shl_pathname), shell=True)
                 return True
             if field['color']!='gray' or int(field['bpc'])!=1:
                 self.vprint(1, "%s is %u bit(s) %s (not 1 bit gray)" % (self.shl_pathname, int(field['bpc']), field['color']))
+                if not self.fix:
+                    continue
                 if not fixed_tifs:
                     repair_cmd = ('gs -q -dSAFER -dNOPAUSE -dBATCH -dUseCropBox -sOutputFile=temp_%d.tif' +
                            ' -r300 -sDEVICE=tiffg4 -c "{ .5 gt { 1 } { 0 } ifelse} settransfer" -f ' +  self.shl_pathname)
@@ -54,15 +69,16 @@ class PdfWalker(Walker):
                     self.vprint (1, "repair_cmd=", repair_cmd)
                     call(repair_cmd, shell=True)
                 fixed_tifs.append('temp_%d.tif' % (1+len(fixed_tifs)))
+                continue
                 #call("convert %s -monochrome -threshold 50 %s" % (self.shl_pathname, self.tmp_pdf_filename), shell=True)
                 # unfinished!
                 #call("cp %s %s"  % (self.tmp_shl_pathname, self.shl_pathname), shell=True)
+            self.vprint(2, "good image encountered")
         if fixed_tifs:
             reunite_cmd = 'convert ' + ' '.join(fixed_tifs)+ ' ' + self.shl_pathname
             self.vprint(1, "reunite_cmd=", reunite_cmd)
             call(reunite_cmd, shell=True)
             return True
-        self.vprint(2, "%s is fine!" % self.shl_pathname)
         return False
 
 

@@ -39,21 +39,23 @@ class Walker:
     def cleanup(self):
         pass
 
+    def process_keyword_arg(self, a):
+        if a in ('-v', '--verbose'):
+            self.verbosity += 1
+            return
+        # making recursion optional and not the default is a "to do .. maybe" action!
+        # elif a in('-r', '--recurse'):
+        #    self.recurse = 1
+        #    continue
+        else:
+            print("keyword '%s' not understood." % a)
+            sys.exit(991)
+
     def main(self):
         #print (os.getcwd())
         prog_path = sys.argv.pop(0)
         while sys.argv and sys.argv[0].startswith('-'):
-            a = sys.argv.pop(0)
-            if a in ('-v', '--verbose'):
-                self.verbosity += 1
-                continue
-            # making recursion optional and not the default is a "to do .. maybe" action!
-            #elif a in('-r', '--recurse'):
-            #    self.recurse = 1
-            #    continue
-            else:
-                print ("keyword '%s' not understood." % a)
-                sys.exit(991)
+            self.process_keyword_arg(sys.argv.pop(0))
         targets = [arg for arg in sys.argv if not arg.startswith('-')] or '.'
         self.vprint(1, "running", prog_path)
         for target in targets:

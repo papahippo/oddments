@@ -51,7 +51,7 @@ class PdfWalker(Walker):
                     repair_cmd = ('gs -q -dSAFER -dNOPAUSE -dBATCH -dUseCropBox -sOutputFile=temp_%d.tif' +
                            ' -r300 -sDEVICE=tiffg4 -c "{ .5 gt { 1 } { 0 } ifelse} settransfer" -f ' +  self.shl_pathname)
                      #    ' -c "{ .5 gt { 1 } { 0 } ifelse} settransfer" -f %s' % self.shl_pathname)
-                    print ("repair_cmd=", repair_cmd)
+                    self.vprint (1, "repair_cmd=", repair_cmd)
                     call(repair_cmd, shell=True)
                 fixed_tifs.append('temp_%d.tif' % (1+len(fixed_tifs)))
                 #call("convert %s -monochrome -threshold 50 %s" % (self.shl_pathname, self.tmp_pdf_filename), shell=True)
@@ -59,7 +59,7 @@ class PdfWalker(Walker):
                 #call("cp %s %s"  % (self.tmp_shl_pathname, self.shl_pathname), shell=True)
         if fixed_tifs:
             reunite_cmd = 'convert ' + ' '.join(fixed_tifs)+ ' ' + self.shl_pathname
-            print("reunite_cmd=", reunite_cmd)
+            self.vprint(1, "reunite_cmd=", reunite_cmd)
             call(reunite_cmd, shell=True)
             return True
         self.vprint(2, "%s is fine!" % self.shl_pathname)

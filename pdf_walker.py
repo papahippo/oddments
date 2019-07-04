@@ -21,7 +21,7 @@ class PdfWalker(Walker):
             outs, errs = proc.communicate()
         out_lines = outs.decode(sys.stdout.encoding).split('\n')
         err_lines = errs.decode(sys.stderr.encoding).split('\n')
-        if 0 or err_lines:  # disabled, not sure why!?
+        if 0: #  or err_lines:  # disabled, not sure why!?
             print("(buggy old?) pdfimages gave errors on %s" % self.shl_pathname)
             return None
         if len(out_lines)<2:
@@ -32,6 +32,7 @@ class PdfWalker(Walker):
         if not out_lines:
             self.vprint(1, "no images in %s" % self.shl_pathname)
             return None  # => no images
+        fixed_tifs = []
         for l in out_lines:
             if len(l)<3:
                 continue
@@ -46,10 +47,21 @@ class PdfWalker(Walker):
                 return True
             if field['color']!='gray' or int(field['bpc'])!=1:
                 self.vprint(1, "%s is %u bit(s) %s (not 1 bit gray)" % (self.shl_pathname, int(field['bpc']), field['color']))
-                call("convert %s -monochrome -threshold 50 %s" % (self.shl_pathname, self.tmp_pdf_filename), shell=True)
+                if not fixed_tifs:
+                    repair_cmd = ('gs -q -dSAFER -dNOPAUSE -dBATCH -dUseCropBox -sOutputFile=temp_%d.tif' +
+                           ' -r300 -sDEVICE=tiffg4 -c "{ .5 gt { 1 } { 0 } ifelse} settransfer" -f ' +  self.shl_pathname)
+                     #    ' -c "{ .5 gt { 1 } { 0 } ifelse} settransfer" -f %s' % self.shl_pathname)
+                    print ("repair_cmd=", repair_cmd)
+                    call(repair_cmd, shell=True)
+                fixed_tifs.append('temp_%d.tif' % (1+len(fixed_tifs)))
+                #call("convert %s -monochrome -threshold 50 %s" % (self.shl_pathname, self.tmp_pdf_filename), shell=True)
                 # unfinished!
                 #call("cp %s %s"  % (self.tmp_shl_pathname, self.shl_pathname), shell=True)
-                return True
+        if fixed_tifs:
+            reunite_cmd = 'convert ' + ' '.join(fixed_tifs)+ ' ' + self.shl_pathname
+            print("reunite_cmd=", reunite_cmd)
+            call(reunite_cmd, shell=True)
+            return True
         self.vprint(2, "%s is fine!" % self.shl_pathname)
         return False
 

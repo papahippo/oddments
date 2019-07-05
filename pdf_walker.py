@@ -63,7 +63,7 @@ class PdfWalker(Walker):
                 if not self.fix:
                     continue
                 if not fixed_tifs:
-                    repair_cmd = ('gs -q -dSAFER -dNOPAUSE -dBATCH -dUseCropBox -sOutputFile=temp_%d.tif' +
+                    repair_cmd = ('gs -q -dNOPAUSE -dBATCH -dUseCropBox -sOutputFile=temp_%d.tif' +
                            ' -r300 -sDEVICE=tiffg4 -c "{ .5 gt { 1 } { 0 } ifelse} settransfer" -f ' +  self.shl_pathname)
                      #    ' -c "{ .5 gt { 1 } { 0 } ifelse} settransfer" -f %s' % self.shl_pathname)
                     self.vprint (1, "repair_cmd=", repair_cmd)

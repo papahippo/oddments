@@ -8,6 +8,17 @@ class A5A5toA4L(Walker):
 
     name_ =  "2xA5 landscape (on 1 A4 page) to 2 A4 landscape pages converter"
     tag_ = '-A4L'
+    skip_upper = 0
+    skip_lower = 0
+
+    def process_keyword_arg(self, a):
+        if a in ('-U', '--skip-upper'):
+            self.skip_upper += 1
+            return
+        if a in ('-L', '--skip-lower'):
+            self.skip_lower += 1
+            return
+        Walker.process_keyword_arg(self, a)
 
     def handle_item(self, root_, item_, is_dir):
         print(root_, item_)
@@ -20,11 +31,11 @@ class A5A5toA4L(Walker):
         for p in [input.getPage(i) for i in range(0, input.getNumPages())]:
             q = copy.copy(p)
             (w, h) = p.mediaBox.upperRight
-            p.mediaBox.upperRight = (w, h / 2)
-            q.mediaBox.lowerRight = (w, h / 2)
-            if not '-L' in sys.argv:
+            p.mediaBox.lowerRight = (w, h / 2)
+            q.mediaBox.upperRight = (w, h / 2)
+            if not self.skip_upper:
                 output.addPage(p)
-            if not '-U' in sys.argv:
+            if not self.skip_lower:
                 output.addPage(q)
         output.write(open('%s/%s%s%s' %(root_, stem_, self.tag_, ext_,), 'wb'))
         return True

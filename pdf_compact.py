@@ -43,13 +43,16 @@ class A5A5toA4L(Walker):
             for img in imglist:
                 xref = img[0]  # xref number
                 pix = fitz.Pixmap(input, xref)  # make pixmap from image
+                print(dir(pix))
+                break
                 pilimg = Image.frombuffer(gray, [pix.width, pix.height], pix.samples,
                                        'raw', gray, 0, 1)
                 imgcount += 1
                 bi_image = pilimg.point(lambda p: p > self.threshold and 255)
                 outputFileName = '%s/%s-%d.tif'  %(root_, stem_, imgcount)
                 self.vprint(1, 'Writing %s' % outputFileName)
-                bi_image.save(outputFileName)
+                print(dir(bi_image))
+                bi_image.writeTIF(outputFileName)
                 #samples = bi_image.tobytes()
                 #rect = bi_image[0].rect
                 #self.vprint(1, "rect =", rect)

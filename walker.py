@@ -47,17 +47,22 @@ class Walker:
         # elif a in('-r', '--recurse'):
         #    self.recurse = 1
         #    continue
-        else:
-            print("keyword '%s' not understood." % a)
-            sys.exit(991)
+        if a in ('-h', '--help'):
+            print("all utilities based around the 'Walker' class (also) accept the arguments (don't enter the quotes!):\n"
+                  "'--verbose'   or equivalently '-v'\n"
+                  "which may be repeated for even more verbosity (explanatory textual output)."
+                  )
+            sys.exit(0)
+        print("keyword '%s' not understood." % a)
+        sys.exit(991)
 
     def main(self):
         #print (os.getcwd())
         prog_path = sys.argv.pop(0)
         while sys.argv and sys.argv[0].startswith('-'):
             self.process_keyword_arg(sys.argv.pop(0))
-        targets = [arg for arg in sys.argv if not arg.startswith('-')] or '.'
-        self.vprint(1, "running", prog_path)
+        targets = sys.argv or ['.']
+        self.vprint(1, "running '%s' on '%s'" %(prog_path, ' '.join(sys.argv)))
         for target in targets:
             self.walk(target)
 

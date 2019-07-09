@@ -2,16 +2,17 @@
 # WARNING: I have abandoned this approach 'for now'!
 #
 import copy, sys, os
-import fitz
+from PyPDF2 import PdfFileWriter, PdfFileReader
 from PIL import Image
 
 from walker import Walker
 
-class A5A5toA4L(Walker):
+class Pdf_compact(Walker):
 
-    name_ =  "converter of images embedded within a PDF to more compact format"
+    name_ =  "converter of images embedded within a PDF to a more compact format"
     tag_ = '-compact'
-    threshold = 50
+    threshold_ = 50
+    copies_ = 1
 
     def process_keyword_arg(self, a):
         if a in ('-t', '--threshold'):
@@ -32,31 +33,45 @@ class A5A5toA4L(Walker):
         stem_, ext_ = os.path.splitext(item_)
         if is_dir or ext_.lower() not in ('.pdf',) or stem_.endswith(self.tag_):
             return None
-        input = fitz.open('%s/%s' %(root_, item_))
-        self.vprint(1, "input PDF contains %d page(s)" % len(input))
-        imgcount = 0
-        output = fitz.open()
-        rgb = 'rgb'
-        gray = 'P'
-        for i in range(len(input)):
-            imglist = input.getPageImageList(i)
-            for img in imglist:
-                xref = img[0]  # xref number
-                pix = fitz.Pixmap(input, xref)  # make pixmap from image
-                pilimg = Image.frombuffer(gray, [pix.width, pix.height], pix.samples,
-                                       'raw', gray, 0, 1)
-                imgcount += 1
-                bi_image = pilimg.point(lambda p: p > self.threshold and 255)
-                outputFileName = '%s/%s-%d.tif'  %(root_, stem_, imgcount)
-                self.vprint(1, 'Writing %s' % outputFileName)
-                bi_image.save(outputFileName)
+        input = PdfFileReader(open('%s/%s' %(root_, item_), 'rb'), strict=False)
+        output = PdfFileWriter()
+        np = input.getNumPages()
+        self.vprint(1, "input PDF contains %d page(s)" % np)
+        for i in range(self.copies_):
+            for page in [input.getPage(i) for i in range(0, input.getNumPages())]:
+                xObject = page['/Resources']['/XObject'].getObject()
+
+                for obj in xObject:
+                    if xObject[obj]['/Subtype'] == '/Image':
+                        size = (xObject[obj]['/Width'], xObject[obj]['/Height'])
+                        data = xObject[obj].getData()
+                        if xObject[obj]['/ColorSpace'] == '/DeviceRGB':
+                            mode = "RGB"
+                        else:
+                            mode = "P"
+
+                        if xObject[obj]['/Filter'] == '/FlateDecode':
+                            img = Image.frombytes(mode, size, data)
+                            img.save(obj[1:] + ".png")
+                        elif xObject[obj]['/Filter'] == '/DCTDecode':
+                            img = open(obj[1:] + ".jpg", "wb")
+                            img.write(data)
+                            img.close()
+                        elif xObject[obj]['/Filter'] == '/JPXDecode':
+                            img = open(obj[1:] + ".jp2", "wb")
+                            img.write(data)
+                            img.close()
+                # bi_image.save(outputFileName)
                 #samples = bi_image.tobytes()
                 #rect = bi_image[0].rect
                 #self.vprint(1, "rect =", rect)
 
-        self.vprint(1, "input PDF contains %d image(s)" % imgcount)
+        outCount = output.getNumPages()
+        outName =  '%s/%s%s.pdf'  %(root_, stem_, self.tag_, imgcount)
+        output.write(open(outName, 'wb'))
+        print ("written", outCount, "pages to", outName)
         return True
 
 
 if __name__ == '__main__':
-    A5A5toA4L().main()
+    Pdf_compact().main()

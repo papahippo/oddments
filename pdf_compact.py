@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
+# This was intended as a cleaner compacter approach to conversion of grey scale or RGB
+# images within PDFs to lineart/bivalue than that afforded by 'pdf_walker.py'.
 # WARNING: I have abandoned this approach 'for now'!
 #
 import copy, sys, os
 import fitz
 from PIL import Image
-
+from io import BytesIO
 from walker import Walker
 
 class A5A5toA4L(Walker):
@@ -43,21 +45,22 @@ class A5A5toA4L(Walker):
             for img in imglist:
                 xref = img[0]  # xref number
                 pix = fitz.Pixmap(input, xref)  # make pixmap from image
-                print(dir(pix))
-                break
                 pilimg = Image.frombuffer(gray, [pix.width, pix.height], pix.samples,
                                        'raw', gray, 0, 1)
                 imgcount += 1
-                bi_image = pilimg.point(lambda p: p > self.threshold and 255)
-                outputFileName = '%s/%s-%d.tif'  %(root_, stem_, imgcount)
-                self.vprint(1, 'Writing %s' % outputFileName)
-                print(dir(bi_image))
-                bi_image.writeTIF(outputFileName)
-                #samples = bi_image.tobytes()
-                #rect = bi_image[0].rect
-                #self.vprint(1, "rect =", rect)
-
-        self.vprint(1, "input PDF contains %d image(s)" % imgcount)
+                bi_image = pilimg.point(lambda p: p > self.threshold and 255, mode='1')
+                #outputFileName = '%s/%s-%d.tif'  %(root_, stem_, imgcount)
+                #self.vprint(1, 'Writing %s' % outputFileName)
+                bio = BytesIO()
+                bi_image.save(bio, format="tiff", compression="tiff_ccitt")
+                bi_image.save("one.tiff", format="tiff", compression="tiff_ccitt")
+                imgdoc = fitz.open("tiff", bio.getvalue())
+                pdfbytes = imgdoc.convertToPDF()
+                imgpdf = fitz.open("pdf", pdfbytes)
+                page = output.newPage()
+                page.showPDFpage(page.rect, imgpdf, 0)
+        # self.vprint(1, "input PDF contains %d image(s)" % imgcount)
+        output.save('%s/%s%s.pdf' %(root_, stem_, self.tag_))
         return True
 
 

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-" dive into music archive and perform maintenance or analyis or report tasks on all PDFs"
+""" dive into music archive and perform maintenance or analysis or repair tasks on all PDFs"""
 import sys, os, re
 from subprocess import Popen, PIPE, TimeoutExpired, call
 
@@ -12,11 +12,26 @@ class PdfWalker(Walker):
     ps_filename = '/tmp/pdf_fix.ps'
     tmp_pdf_filename = '/tmp/pdf_fix.pdf'
     fix = 0
+    resolution = 300
+    threshold = 0.5
 
     def process_keyword_arg(self, a):
         if a in ('-f', '--fix'):
             self.fix += 1
             return
+        if a in ('-r', '--resolution'):
+            self.resolution = int(sys.argv.pop(0))
+            return
+        if a in ('-t', '--threshold'):
+            parts = sys.argv.pop(0).split('%')
+            self.threshold = float(parts.pop(0))
+            if not parts:
+                return
+            self.threshold /= 100.0
+            if not parts.pop(0) and not parts:
+                return
+            raise ValueError("bad threshold value")
+
         # making recursion optional and not the default is a "to do .. maybe" action!
         # elif a in('-r', '--recurse'):
         #    self.recurse = 1
@@ -55,6 +70,11 @@ class PdfWalker(Walker):
                 self.vprint(1, "%s contains in-line or not ccitt-encoded image(s)" % self.shl_pathname)
                 if not self.fix:
                     continue
+                # This file is quite possibly created by 'xsane' which uses in-line data not embedded objects
+                # for scan images. While not wrong, this has been known to give problems with e.g. poppler
+                # whose logic used to assume that in-line images are always very small (?not 100% sure of this story).
+                # anyway, they are easily corrected:
+                #
                 call("pdf2ps %s %s" % (self.shl_pathname, self.ps_filename), shell=True)
                 call("ps2pdf %s %s" % (self.ps_filename, self.shl_pathname), shell=True)
                 return True
@@ -62,9 +82,14 @@ class PdfWalker(Walker):
                 self.vprint(1, "%s is %u bit(s) %s (not 1 bit gray)" % (self.shl_pathname, int(field['bpc']), field['color']))
                 if not self.fix:
                     continue
+                # So we want to convert a PDF's image from e.g RGB or 8-bit grey to one-bit grey (=bivalue=B/W=lineart).
+                # I'm not really happy with this 'ghostscript approach - not least because you often need to change
+                # .../share/ghostscript/policy.xml' before it will work!
                 if not fixed_tifs:
                     repair_cmd = ('gs -q -dNOPAUSE -dBATCH -dUseCropBox -sOutputFile=temp_%d.tif' +
-                           ' -r300 -sDEVICE=tiffg4 -c "{ .5 gt { 1 } { 0 } ifelse} settransfer" -f ' +  self.shl_pathname)
+                           ' -r%u -sDEVICE=tiffg4 -c "{ %.2f gt { 1 } { 0 } ifelse} settransfer" -f '
+                            % (self.resolution, self.threshold)
+                                  +  self.shl_pathname)
                      #    ' -c "{ .5 gt { 1 } { 0 } ifelse} settransfer" -f %s' % self.shl_pathname)
                     self.vprint (1, "repair_cmd=", repair_cmd)
                     call(repair_cmd, shell=True)

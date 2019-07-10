@@ -36,6 +36,16 @@ class PdfWalker(Walker):
         # elif a in('-r', '--recurse'):
         #    self.recurse = 1
         #    continue
+        if a in ('-h', '--help'):
+            print("utility to check images within a PDF and optionally 'fix' them.\n"
+                 "syntax:  pdf_walker.py [options] [paths]\n"
+                  "special options for pdf_walker.py are: (shown quoted but must be entered unquoted!)\n"
+                  "'--threshold'   or equivalently '-t'\n"
+                  "means interpret the next argument as the black threshold for conversion to mono ('lineart')\n"
+                  "this may be entered as e.g. 0.6 or equivalently 60%. The default is 0.5 (50%)\n"
+                  "'--resolution'   or equivalently '-r'\n"
+                  "means interpret the next argument as the resolution to use. The default is 300.\n"
+                  )
         Walker.process_keyword_arg(self, a)
 
     def check_images(self, effort):

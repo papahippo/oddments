@@ -1,105 +1,47 @@
-#!/usr/bin/python3
-# from __future__ import print_function
-import sys, os
-import sane
-import numpy
-from PIL import Image
+#! python
+'''
+This demo extracts all images of a PDF as PNG files, whether they are
+referenced by pages or not.
+It scans through all objects and selects /Type/XObject with /Subtype/Image.
+So runtime is determined by number of objects and image volume.
+Usage:
+extract_img2.py input.pdf
+'''
+from __future__ import print_function
+import fitz
+import sys, time, re
 
-#
-# Change these for 16bit / grayscale scans
-#
-depth = None
-mode = 'lineart'  # ''color'
+checkXO = r"/Type(?= */XObject)"  # finds "/Type/XObject"
+checkIM = r"/Subtype(?= */Image)"  # finds "/Subtype/Image"
 
-#
-# Initialize sane
-#
-ver = sane.init()
-print('SANE version:', ver)
+if len(sys.argv) != 2:
+    print('Usage: %s <input file>' % sys.argv[0])
+    exit(0)
 
-#
-# Get devices
-#
-devices = sane.get_devices()
-print('Available devices:', devices)
+t0 = time.clock()
+doc = fitz.open(sys.argv[1])
+imgcount = 0
+lenXREF = doc._getXrefLength()  # number of objects - do not use entry 0!
 
-#
-# Open first device
-#
-dev = sane.open(devices[0][0])
-print (dev.optlist)
-#
-# Set some options
-#
-params = dev.get_parameters()
-if 0:
-    try:
-        dev.depth = depth
-    except:
-        print('Cannot set depth, defaulting to %d' % params[3])
-if 1:
-    try:
-        dev.mode = mode
-    except:
-        print('Cannot set mode, defaulting to %s' % params[0])
+# display some file info
+print("file: %s, pages: %s, objects: %s" % (sys.argv[1], len(doc), lenXREF - 1))
 
-if 0:
-    try:
-        dev.br_x = 320.
-        dev.br_y = 240.
-    except:
-        print('Cannot set scan area, using default')
-
-params = dev.get_parameters()
-print('Device parameters:', params)
-print('original resolution =', dev.resolution)
-dev.resolution = 600
-print('changed resolution =', dev.resolution)
-# dev.threshold=75
-# params = dev.get_parameters()
-# print('after threshold change: Device parameters:', params)
-# Start a scan and get and PIL.Image object
-#
-all_png_files = []
-name = 'scanned'
-while 1:
-    pdf_name = name + '.pdf'
-    new_page_num = 1+len(all_png_files)
-    new_png_name = '%s-page%03u.png' %(name, new_page_num)
-    print("enter '+' to scan '%s', 'q' to quit, or a decimal numer (1-99) to change black-white threshold (currently %d):"
-          %(new_png_name, dev.threshold))
-    print("or enter name (no suffix) to change name from '%s':" % name)
-    if all_png_files:
-        print ("or enter '=' to accept and save %u accumulated pages as %s:"
-               % (len(all_png_files), pdf_name))
-        print("or enter '-' to forget lastest scanned page:")
-    answer = sys.stdin.readline().strip()
-    if answer == 'q':
-        dev.close()
-        sys.exit(0)
-    if answer == '+':
-        dev.start()
-        im = dev.snap()
-
-        im.save(new_png_name)
-        all_png_files.append(new_png_name)
+for i in range(1, lenXREF):  # scan through all objects
+    text = doc._getObjectString(i)  # string defining the object
+    isXObject = re.search(checkXO, text)  # tests for XObject
+    isImage = re.search(checkIM, text)  # tests for Image
+    if not isXObject or not isImage:  # not an image object if not both True
         continue
-    if answer == '-':
-        if all_png_files:
-            all_png_files.pop()
-        continue
-    if answer == '=':
-        cmd = "convert %s %s" % (' '.join(all_png_files), pdf_name)
-        print ("executing command '%s'..." %cmd)
-        os.system(cmd)
-        print("... done!")
-        all_png_files = []  # clear the decks!
-        continue
-    if answer.isnumeric():
-        dev.threshold = int(answer)
-        continue
-    name = answer
-#
-# leve de ouwe meuk:
-# im = im.convert('L')
-# im = im.point(lambda x: x > 150)
+    imgcount += 1
+    pix = fitz.Pixmap(doc, i)  # make pixmap from image
+    if pix.n < 5:  # can be saved as PNG
+        pix.writePNG("img-%s.png" % (i,))
+    else:  # must convert the CMYK first
+        pix0 = fitz.Pixmap(fitz.csRGB, pix)
+        pix0.writePNG("img-%s.png" % (i,))
+        pix0 = None  # free Pixmap resources
+    pix = None  # free Pixmap resources
+
+t1 = time.clock()
+print("run time", round(t1 - t0, 2))
+print("extracted images", imgcount)

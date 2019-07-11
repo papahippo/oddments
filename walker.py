@@ -6,6 +6,7 @@ import sys, os, shlex
 
 class Walker:
     name_ = "dummy walker"
+    verbosity = recurse = 0
 
     def vprint(self, this_verbosity, *pp, **kw):
         if self.verbosity >= this_verbosity:
@@ -19,6 +20,7 @@ class Walker:
         self.vprint(2, self.name_, 'isdir=%u' % is_dir, root_, item_name)
         self.composite_pathname = os.path.join(root_, item_name)
         self.shl_pathname = shlex.quote(self.composite_pathname)
+        os.system("ls -l %s" % os.path.normpath(self.shl_pathname))
         return False
 
     def walk(self, target):
@@ -37,12 +39,30 @@ class Walker:
     def cleanup(self):
         pass
 
+    def process_keyword_arg(self, a):
+        if a in ('-v', '--verbose'):
+            self.verbosity += 1
+            return
+        # making recursion optional and not the default is a "to do .. maybe" action!
+        # elif a in('-r', '--recurse'):
+        #    self.recurse = 1
+        #    continue
+        if a in ('-h', '--help'):
+            print("all utilities based around the 'Walker' class (also) accept the arguments (don't enter the quotes!):\n"
+                  "'--verbose'   or equivalently '-v'\n"
+                  "which may be repeated for even more verbosity (explanatory textual output)."
+                  )
+            sys.exit(0)
+        print("keyword '%s' not understood." % a)
+        sys.exit(991)
+
     def main(self):
         #print (os.getcwd())
         prog_path = sys.argv.pop(0)
-        self.verbosity = sum([a in ('-v', '--verbose') for a in sys.argv])
-        targets = [arg for arg in sys.argv if not arg.startswith('-')] or '.'
-        self.vprint(1, "running", prog_path)
+        while sys.argv and sys.argv[0].startswith('-'):
+            self.process_keyword_arg(sys.argv.pop(0))
+        targets = sys.argv or ['.']
+        self.vprint(1, "running '%s' on '%s'" %(prog_path, ' '.join(sys.argv)))
         for target in targets:
             self.walk(target)
 

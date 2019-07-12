@@ -1,6 +1,9 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-""" dive into music archive and perform maintenance or analysis or repair tasks on all PDFs"""
+""" dive into music archive and perform maintenance or analysis or repair tasks on all PDFs
+N.B. There is considerable overlap in functinality between this scriprt and oddments/pdf_compact.py
+... but I am wary of burning bridges just yet!"""
+
 import sys, os, re
 from subprocess import Popen, PIPE, TimeoutExpired, call
 
@@ -95,6 +98,8 @@ class PdfWalker(Walker):
                 # So we want to convert a PDF's image from e.g RGB or 8-bit grey to one-bit grey (=bivalue=B/W=lineart).
                 # I'm not really happy with this 'ghostscript approach - not least because you often need to change
                 # .../share/ghostscript/policy.xml' before it will work!
+                # N.B. This is unnecessarily complicated. 'gs' can convert a multi-page PDF in one go.
+                # See 'oddments/pdf_compact.py'.
                 if not fixed_tifs:
                     repair_cmd = ('gs -q -dNOPAUSE -dBATCH -dUseCropBox -sOutputFile=temp_%d.tif' +
                            ' -r%u -sDEVICE=tiffg4 -c "{ %.2f gt { 1 } { 0 } ifelse} settransfer" -f '

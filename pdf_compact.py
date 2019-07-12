@@ -11,7 +11,7 @@ class Pdf_compact(Walker):
     name_ =  "converter of images embedded within a PDF to more compact format"
     tag_ = '-compact'
     threshold = 0.5
-    resolution = 300
+    resolution = 600
 
     def process_keyword_arg(self, a):
         if a in ('-r', '--resolution'):
@@ -45,13 +45,16 @@ class Pdf_compact(Walker):
         stem_, ext_ = os.path.splitext(item_)
         if is_dir or ext_.lower() not in ('.pdf',) or stem_.endswith(self.tag_):
             return None
-        repair_cmd = ('gs -q -dNOPAUSE -dBATCH -dUseCropBox -sOutputFile=%s/%s%s.pdf' %(root_, stem_, self.tag_) +
+        compact_cmd = ('gs -q -dNOPAUSE -dBATCH -dUseCropBox -sOutputFile=temp.tiff' +
                       ' -r%u -sDEVICE=tiffg4 -c "{ %.2f gt { 1 } { 0 } ifelse} settransfer" -f '
                       % (self.resolution, self.threshold)
                       + self.shl_pathname)
         #    ' -c "{ .5 gt { 1 } { 0 } ifelse} settransfer" -f %s' % self.shl_pathname)
-        self.vprint(1, "repair_cmd=", repair_cmd)
-        subprocess.call(repair_cmd, shell=True)
+        self.vprint(1, "compact_cmd=", compact_cmd)
+        subprocess.call(compact_cmd, shell=True)
+        convert_cmd = ("convert temp.tiff %s/%s%s.pdf" %(root_, stem_, self.tag_))
+        self.vprint(1, "convert_cmd=", convert_cmd)
+        subprocess.call(convert_cmd, shell=True)
 
         return True
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
+# this is kind of obsolete. pdf_neat.py does the same and more; so watch this space for empty space!
+#
 import copy, sys, os
 from PyPDF2 import PdfFileWriter, PdfFileReader
-
-from walker import Walker
 
 def main():
     progName = sys.argv.pop(0)

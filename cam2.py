@@ -1,17 +1,19 @@
 import sys
-from PyQt4 import QtGui, QtCore
+from PySide import QtGui, QtCore
 import cv2
 
 class QtCapture(QtGui.QWidget):
     def __init__(self, *args):
-        super(QtGui.QWidget, self).__init__()
+        QtGui.QWidget.__init__(self)
 
         self.fps = 24
-        self.cap = cv2.VideoCapture(*args)
+        cam_index = (len(sys.argv)>1) and int(sys.argv[1]) or 0
+        print("using camera", cam_index)
+        self.cap = cv2.VideoCapture(cam_index)   # (*args)
 
         self.video_frame = QtGui.QLabel()
         lay = QtGui.QVBoxLayout()
-        lay.setMargin(0)
+        # lay.setMargin(0)
         lay.addWidget(self.video_frame)
         self.setLayout(lay)
 

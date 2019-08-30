@@ -15,7 +15,7 @@ for f in onlyfiles:
     if ext not in myexts:
         print("skippping %s because extension not in '%s'" %(f, myexts))
         continue
-    if base.endswith(dest_suffix):
+    if base.endswith(dest_suffix) or base.endswith('-A4L'):
         print("skippping %s because name indicates it is already in desired format." %f)
         continue
     old_filename = mypath + f

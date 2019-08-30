@@ -36,10 +36,20 @@ class A5A5toA4L(Walker):
         input = PdfFileReader(open('%s/%s' %(root_, item_), 'rb'))
         output = PdfFileWriter()
         for p in [input.getPage(i) for i in range(0, input.getNumPages())]:
-            q = copy.copy(p)
             (w, h) = p.mediaBox.upperRight
-            p.mediaBox.lowerRight = (w, h / 2)
-            q.mediaBox.upperRight = (w, h / 2)
+            p.scaleBy(1.4142)
+            p.rotateCounterClockwise(90)
+            q = copy.copy(p)
+            print('##', p.mediaBox)
+            print('!!!!!!', w, h)
+            p.mediaBox.upperLeft = (0, w*2)
+            p.mediaBox.upperRight = (h, w*2)
+            p.mediaBox.lowerLeft = (0,  w)
+            p.mediaBox.lowerRight = (h,  w)
+            q.mediaBox.upperLeft = (0, w)
+            q.mediaBox.upperRight = (h, w)
+            q.mediaBox.lowerLeft = (0, 0)
+            q.mediaBox.lowerRight = (0, h)
             if not self.lower_only:
                 output.addPage(p)
             if not self.upper_only:

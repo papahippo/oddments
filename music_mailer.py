@@ -138,8 +138,7 @@ def main():
 # prepare the HTML version of the message body
 # note that we need to peel the <> off the msgid for use in the html.
         icon_content_id = email.utils.make_msgid()
-        html_layout = get_html_layout()
-        str(
+        html_layout = str(
             h.html | ("\n",
                 h.head | (
                 ),

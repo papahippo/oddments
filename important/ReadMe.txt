@@ -1,0 +1,3 @@
+This directory is created to allow playing around with 'import' techniques.
+I hve been playing fast and loose with the python notion of importing...
+how much is going to come back and bite me!

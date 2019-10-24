@@ -37,8 +37,8 @@ class A5A5toA4L(Walker):
         output = PdfFileWriter()
         for p in [input.getPage(i) for i in range(0, input.getNumPages())]:
             (w, h) = p.mediaBox.upperRight
-            p.scaleBy(1.4142)
-            p.rotateCounterClockwise(90)
+            #p.scaleBy(1.4142)
+            #p.rotateCounterClockwise(90)
             q = copy.copy(p)
             print('##', p.mediaBox)
             print('!!!!!!', w, h)

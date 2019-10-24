@@ -42,14 +42,8 @@ class A5A5toA4L(Walker):
             q = copy.copy(p)
             print('##', p.mediaBox)
             print('!!!!!!', w, h)
-            p.mediaBox.upperLeft = (0, w*2)
-            p.mediaBox.upperRight = (h, w*2)
-            p.mediaBox.lowerLeft = (0,  w)
-            p.mediaBox.lowerRight = (h,  w)
-            q.mediaBox.upperLeft = (0, w)
-            q.mediaBox.upperRight = (h, w)
-            q.mediaBox.lowerLeft = (0, 0)
-            q.mediaBox.lowerRight = (0, h)
+            p.mediaBox.upperRight = (w, h / 2)
+            q.mediaBox.lowerRight = (w, h / 2)
             if not self.lower_only:
                 output.addPage(p)
             if not self.upper_only:

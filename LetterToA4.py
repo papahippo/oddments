@@ -20,7 +20,7 @@ print("running '%s' to convert scanned images from 'letter' without margin to A4
 mypath = (sys.argv and sys.argv.pop(0)) or './'
 onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
 myexts = '.bmp', '.ppm', '.pdf'
-dest_prefix = 'a4/'
+dest_prefix = 'a4-'
 
 if '/' in dest_prefix:
     try:
@@ -33,9 +33,9 @@ for f in onlyfiles:
         print("skippping bacause extension not in %s: %s" %(myexts, f))
         continue
     old_filename = mypath + f
-    new_filename = mypath + dest_prefix + f + '.pdf'
+    new_filename = mypath + dest_prefix + f
     if ext == '.pdf':
-        cmd = "pdfjam --outfile %s  --paper a4paper --scale 0.9 %s" %(new_filename, old_filename)
+        cmd = "pdfjam --outfile %s  --paper a4paper --scale 0.93 %s" %(new_filename, old_filename)
         print("converting this %s files with a one-liner: '%s'" %(myexts, cmd))
         os.system(cmd)
         continue

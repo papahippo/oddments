@@ -3,7 +3,7 @@
 Experimental work for ultimate employment within cherrypy web page!
 """
 import os, sys
-# from entity.company import OutgoingItem
+from entity.company import OutgoingItem
 
 
 class ImportPath(object):
@@ -27,7 +27,7 @@ def main():
         print (outgoings)
         print("hello?")
         outgoings.OutgoingItem.export()
-
+    # print (OutgoingItem)
 
 if __name__=='__main__':
     main()

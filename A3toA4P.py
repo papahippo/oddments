@@ -3,7 +3,7 @@
 import sys, os, re
 from subprocess import call
 
-from walker import Walker, main
+from walker import Walker
 
 class A3toA4P(Walker):
 
@@ -21,4 +21,4 @@ class A3toA4P(Walker):
 
 
 if __name__ == '__main__':
-    main(A3toA4P)
+    A3toA4P().main()

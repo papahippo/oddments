@@ -1,28 +1,50 @@
 #!/usr/bin/python3
 """
 """
-import sys, os, csv, datetime
-
+import csv
 class Money_:
+    """
+This Money class is not fully implemented. The package you get by 'pip install money' is quite possibly better but I
+couldn't get it to "behave" as I wanted.
+    """
     currency_sign = '#'
     thousands_sep = ','
     cents_sep = '.'
 
     def __init__(self, s):
         if isinstance(s, (float, int)):
-            self.as_cents = int(s*1000)
+            self.as_cents = s*100.
         else:
             s_bare = s[1:].strip()
             s_thousands, s_rest = ('0' + self.thousands_sep + s_bare).split(self.thousands_sep)[-2:]
-            print (s_bare, '->', s_thousands, s_rest)
+            #print (s_bare, '->', s_thousands, s_rest)
             s_whole ,s_frac = (s_rest + self.cents_sep + '00').split(self.cents_sep)[:2]
-            self.as_cents = (int(s_thousands)*1000 + int(s_whole))*100 + int(s_frac)
-            #print (self.as_cents)
+            self.as_cents = (int(s_thousands)*1000. + int(s_whole))*100. + int(s_frac[:2])
 
     def __str__(self):
-        s = str(self.as_cents)
+        s = str(round(self.as_cents))
         # not dealing with thousands yet!
+        print(self.as_cents, '->', s)
         return self.currency_sign + s[:-2] + self.cents_sep + s[-2:]
+
+    def __iadd__(self, other):
+        self.as_cents += other*100.
+        return self
+
+    def __isub__(self, other):
+        self.as_cents -= other*100.
+        return self
+
+    def __imul__(self, other):
+        self.as_cents *= other
+        return self
+
+    def __mul__(self, other):
+        return Money((self.as_cents*other)/100.0)
+
+    def __truediv__(self, other):
+        return Money(self.as_cents/(other*100.0))
+
 
 class Euros(Money_):
     currency_sign = '€'
@@ -70,8 +92,7 @@ class Csv:
         return self
 
     def giveout(self, csv_writer):
-        print('giveout', self.python_names)
-        csv_writer.writerow([str(getattr(self, name)) for name in self.python_names])
+        csv_writer.writerow([getattr(self, name) for name in self.python_names])
 
     def postprocess(self):
         return
@@ -87,20 +108,20 @@ class ContribCsv(Csv):
     perCentIncrease = 10
 
     def postprocess(self):
-        #for finame, pyname in zip(self.field_names, self.python_names):
-        #    print(finame, pyname)
-        for pyname in self.python_names:
-            s = getattr(self, pyname)
-            print(pyname, s)
-            try:
-                money = Money(s)
-            except ValueError:
-                continue
-            #print(money.as_cents)
-            money.as_cents *= (100 + self.perCentIncrease)
-            money.as_cents //= 100
-            print(money.as_cents, '-->', money)
-            setattr(self, pyname, str(money))
+        try:
+            jaarGeld = Money(self._Jaar)
+        except ValueError:
+            return
+        jaarGeld *= ((100 + self.perCentIncrease)/100)
+        jaarGeld -= 0.005
+        kwartaalGeld = jaarGeld / 4
+        kwartaalGeld += 0.003  # this is a real fudge; .005 is logical but gives wrong looking output!
+        maandGeld = kwartaalGeld / 3
+        maandGeld += 0.003  # this is a real fudge; .005 is logical but gives wrong looking output!
+
+        self._Jaar = str(jaarGeld)
+        self._Kwartaal = str(kwartaalGeld)
+        self._Maand = str(maandGeld)
 
     def intake(self):
         return self

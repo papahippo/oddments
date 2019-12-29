@@ -1,41 +1,29 @@
 #!/usr/bin/env python3
-# This was intended as a cleaner compacter approach to conversion of grey scale or RGB
-# images within PDFs to lineart/bivalue than that afforded by 'pdf_walker.py'.
 # WARNING: I have abandoned this approach 'for now'!
 #
-import sys, os, subprocess
+import copy, sys, os
+from PyPDF2 import PdfFileWriter, PdfFileReader
+from PIL import Image
+
 from walker import Walker
 
 class Pdf_compact(Walker):
 
-    name_ =  "converter of images embedded within a PDF to more compact format"
+    name_ =  "converter of images embedded within a PDF to a more compact format"
     tag_ = '-compact'
-    threshold = 0.5
-    resolution = 600
+    threshold_ = 50
+    copies_ = 1
 
     def process_keyword_arg(self, a):
-        if a in ('-r', '--resolution'):
-            self.resolution = int(sys.argv.pop(0))
-            return
         if a in ('-t', '--threshold'):
-            parts = sys.argv.pop(0).split('%')
-            self.threshold = float(parts.pop(0))
-            if not parts:
-                return
-            self.threshold /= 100.0
-            if not parts.pop(0) and not parts:
-                return
-            raise ValueError("bad threshold value")
-
+            self.threshold = int(sys.argv.pop(0))
+            return
         if a in ('-h', '--help'):
             print("utility to convert images within a PDF to a more compact format\n"
                 "syntax:  pdf_compact.py [options] [paths]\n"
                   "special options for pdf_compact are (shown quoted but must be entered unquoted!):\n"
                   "'--threshold'   or equivalently '-t'\n"
                   "means interpret the next argument as the black threshold for conversion to mono ('lineart')\n"
-                  "this may be entered as e.g. 0.6 or equivalently 60%. The default is 0.5 (50%)\n"
-                  "'--resolution'   or equivalently '-r'\n"
-                  "means interpret the next argument as the resolution to use. The default is 300.\n"
                   )
         Walker.process_keyword_arg(self, a)
 
@@ -45,17 +33,43 @@ class Pdf_compact(Walker):
         stem_, ext_ = os.path.splitext(item_)
         if is_dir or ext_.lower() not in ('.pdf',) or stem_.endswith(self.tag_):
             return None
-        compact_cmd = ('gs -q -dNOPAUSE -dBATCH -dUseCropBox -sOutputFile=temp.tiff' +
-                      ' -r%u -sDEVICE=tiffg4 -c "{ %.2f gt { 1 } { 0 } ifelse} settransfer" -f '
-                      % (self.resolution, self.threshold)
-                      + self.shl_pathname)
-        #    ' -c "{ .5 gt { 1 } { 0 } ifelse} settransfer" -f %s' % self.shl_pathname)
-        self.vprint(1, "compact_cmd=", compact_cmd)
-        subprocess.call(compact_cmd, shell=True)
-        convert_cmd = ("convert temp.tiff %s/%s%s.pdf" %(root_, stem_, self.tag_))
-        self.vprint(1, "convert_cmd=", convert_cmd)
-        subprocess.call(convert_cmd, shell=True)
+        input = PdfFileReader(open('%s/%s' %(root_, item_), 'rb'), strict=False)
+        output = PdfFileWriter()
+        np = input.getNumPages()
+        self.vprint(1, "input PDF contains %d page(s)" % np)
+        for i in range(self.copies_):
+            for page in [input.getPage(i) for i in range(0, input.getNumPages())]:
+                xObject = page['/Resources']['/XObject'].getObject()
 
+                for obj in xObject:
+                    if xObject[obj]['/Subtype'] == '/Image':
+                        size = (xObject[obj]['/Width'], xObject[obj]['/Height'])
+                        data = xObject[obj].getData()
+                        if xObject[obj]['/ColorSpace'] == '/DeviceRGB':
+                            mode = "RGB"
+                        else:
+                            mode = "P"
+
+                        if xObject[obj]['/Filter'] == '/FlateDecode':
+                            img = Image.frombytes(mode, size, data)
+                            img.save(obj[1:] + ".png")
+                        elif xObject[obj]['/Filter'] == '/DCTDecode':
+                            img = open(obj[1:] + ".jpg", "wb")
+                            img.write(data)
+                            img.close()
+                        elif xObject[obj]['/Filter'] == '/JPXDecode':
+                            img = open(obj[1:] + ".jp2", "wb")
+                            img.write(data)
+                            img.close()
+                # bi_image.save(outputFileName)
+                #samples = bi_image.tobytes()
+                #rect = bi_image[0].rect
+                #self.vprint(1, "rect =", rect)
+
+        outCount = output.getNumPages()
+        outName =  '%s/%s%s.pdf'  %(root_, stem_, self.tag_, imgcount)
+        output.write(open(outName, 'wb'))
+        print ("written", outCount, "pages to", outName)
         return True
 
 

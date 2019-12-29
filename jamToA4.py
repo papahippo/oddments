@@ -47,7 +47,9 @@ class JamToA4(Walker):
         if is_dir or ext_.lower() not in ('.pdf',) or stem_.startswith(self.prefix_):
             return None
         old_filename = os.path.join(root_, item_)
-        new_filename = os.path.join(root_, self.prefix_ + item_)
+        new_filename = os.path.join(root_, self.prefix_ + item_).replace('-.', '.')
+
+        # cmd = f"pdfjam --outfile {new_filename}  --angle 180 --paper a4paper --scale {self.scale_} {old_filename}"
         cmd = f"pdfjam --outfile {new_filename}  --paper a4paper --scale {self.scale_} {old_filename}"
         print("converting this %s files with a one-liner: '%s'" %(ext_, cmd))
         os.system(cmd)

@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# N.B. This is flawed. Thre recently added rotation stuff seems to work but the margin stuff doesn't!
+
 import sys, os
 from PyPDF2 import PdfFileWriter, PdfFileReader
 
@@ -12,7 +14,9 @@ class Pdf_neat(Walker):
     left_margin = 0
     bottom_margin = 0
     right_margin = 0
-    copies =1
+    clockwise = None
+    anticlockwise = None
+    copies = 1
 
     def process_keyword_arg(self, a):
         if a[1:].isnumeric():
@@ -30,14 +34,23 @@ class Pdf_neat(Walker):
         if a in ('-R', '--right-margin'):
             self.right_margin = int(sys.argv.pop(0))
             return
+        if a in ('-C', '--clockwise'):
+            self.clockwise = sys.argv and int(sys.argv.pop(0)) or 180
+            return
+        if a in ('-A', '--anticlockwise'):
+            self.anticlockwise = sys.argv and int(sys.argv.pop(0)) or 180
+            return
         if a in ('-h', '--help'):
-            print("utility to apply or adjust margins of (usually A$) pages within a PDF\n"
+            print("utility to apply or adjust margins of (usually A4) pages within a PDF\n"
                 "syntax:  pdf_neat.py [options] [paths]\n"
                   "special options for pdf_neat.py are (shown quoted but must be entered unquoted!):\n"
                   "'--top-margin <int>'   or equivalently '-T <int>'\n"
                   "'--left-margin <int>'   or equivalently '-L <int>'\n"
                   "'--bottom-margin <int>'   or equivalently '-B <int>'\n"
                   "'--right-margin <int>'   or equivalently '-R <int>'\n"
+                  "'--clockwise <int>'   or equivalently '-C <int>'\n"
+                  "'--anticlockwise <int>'   or equivalently '-A <int>'\n"
+                  "(either of the above can be used with <int>=180 to fix wrong way up scanning!)\n"
                   "an arguments like '-2' means concatenate (in this case 2) copies of the resulting PDF\n"
                   )
         Walker.process_keyword_arg(self, a)
@@ -58,6 +71,11 @@ class Pdf_neat(Walker):
                                      box.getLowerLeft_y() - self.bottom_margin)
                     box.upperRight = (box.getUpperRight_x() + self.right_margin,
                                       box.getUpperRight_y() + self.top_margin)
+                print(p.getContents())
+                if self.clockwise is not None:
+                    p.rotateClockwise(180)
+                if self.anticlockwise is not None:
+                    p.rotateCounterClockwise(180)
                 output.addPage(p)
         output.write(open('%s/%s%s%s' %(root_, stem_, self.tag_, ext_,), 'wb'))
         return True

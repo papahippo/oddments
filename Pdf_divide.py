@@ -3,7 +3,7 @@ import sys, os
 from PyPDF2 import PdfFileWriter, PdfFileReader
 
 
-class PDF_Bundle:
+class Pdf_Bundle:
     input_name = 'How_to_train_your_dragon-partijen-A4L.pdf'
     output_name_stem = 'How_to_train_your_dragon-'
     output_name_suffix = '.pdf'
@@ -61,4 +61,4 @@ class PDF_Bundle:
 
 
 if __name__ == '__main__':
-    PDF_Bundle().main()
+    Pdf_Bundle().main()

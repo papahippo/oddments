@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 """ dive into music archive and perform maintenance or analysis or repair tasks on all PDFs
-N.B. There is considerable overlap in functinality between this scriprt and oddments/pdf_compact.py
+N.B. There is considerable overlap in functionality between this scriprt and oddments/pdf_compact.py
 ... but I am wary of burning bridges just yet!"""
 
 import sys, os, re

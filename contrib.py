@@ -31,4 +31,4 @@ class ContribCsvo(csvo.Csvo):
 
 
 if __name__ == '__main__':
-    ContribCsvo.main('old_rates.csv', 'new_rates.csv')
+    ContribCsvo().main('old_rates.csv', 'new_rates.csv')

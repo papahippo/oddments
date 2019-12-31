@@ -1,40 +1,14 @@
 #!/usr/bin/python3
 """
 Deduce worked hours from csv downloaded from OV website.
-Work in progress!
+This has been quickly reworked around the 'Csvo' (comma-separated values object) class.
+If rewoking properly, I might try to use teh 'exude' and 'giveout' functions of class 'Csvo'.
 """
 import sys, os, csv, datetime
-
-class Csv:
-    def absorb(cls, fn):
-        with open(fn, 'r') as csvfile:
-            csv_reader = csv.reader(csvfile, delimiter=';')
-            field_names = csv_reader.__next__()
-            attr_names = [('_' + name.lower().replace('-', '_')) for name in field_names]
-            previous = None
-            for row in csv_reader:
-                #print(', '.join(row))
-                instance = cls()
-                instance.previous = previous
-                for an, av in zip(attr_names, row):
-                    instance.__setattr__(an, av)
-                cls.postprocess(instance.intake())
-                previous = instance
-    absorb = classmethod(absorb)
-
-    def postprocess(cls, instance):
-        return
-    postprocess = classmethod(postprocess)
-
-    def main(cls, fn):
-        cls.absorb(fn)
-    main = classmethod(main)
-
-    def intake(self):
-        print("what!?", self._datum, end=' ... ')
+from csvo import Csvo
 
 
-class OvCsv(Csv):
+class OvCsvo(Csvo):
     max_per_day = 8.0
     last_week_number = -1  # impossible
     held_over = 0.0
@@ -42,51 +16,48 @@ class OvCsv(Csv):
     werkStations =  {}
     lunchMinutes = 30
 
-    def postprocess(cls, instance):
-        if not instance:
-            return
-        this_week_number = instance.datetime_out.isocalendar()[1]
-        if cls.last_week_number != this_week_number:
-            cls.cumulative_this_week = 0.0
-            cls.last_week_number = this_week_number
-            print ("------------"*4)
-        hours_worked = instance.time_worked.total_seconds() / 3600
-        bookable_raw = hours_worked + cls.held_over
-        bookable_smooth = min(bookable_raw - (bookable_raw % 0.25), cls.max_per_day)
-        cls.held_over = bookable_raw - bookable_smooth
-        print (instance.datetime_out.strftime("%d-%m-%Y (%A)"), "time worked = %s = %.2f hours, bookable hours=%.2f" %
-               (str(instance.time_worked)[:-3], hours_worked, bookable_smooth))
-        cls.cumulative_this_week += bookable_smooth
-        cls.period_cumulative += bookable_smooth
-        print ("week %d cumulative = %.2f hours , preiod cumulative = %.2f hours" %
-               (this_week_number, cls.cumulative_this_week, cls.period_cumulative))
-
     def intake(self):
-        # print(self._datum, end=' ... ')
-        arriveMinutes = self.previous and self.werkStations.get(self.previous._bestemming)
-        departMinutes = self.werkStations.get(self._vertrek)
+        # print(self._Datum, end=' ... ')
+        arriveMinutes = self.previous and self.werkStations.get(self.previous._Bestemming)
+        departMinutes = self.werkStations.get(self._Vertrek)
         if not (
             (self.previous is not None)
             and arriveMinutes
-            and (self.previous._transactie == "Check-uit")
+            and (self.previous._Transactie == "Check-uit")
             and departMinutes
-            and (self._transactie == "Check-in")
+            and (self._Transactie == "Check-in")
         ):
             return None
-        # print (self._datum, self.previous._check_uit, self._check_in)
+        cls = self.__class__
+        # print (self._Datum, self.previous._Check_uit, self._Check_in)
         self.datetime_out, datetime_back_in = [ datetime.datetime.strptime(date_s + '+' + time_s, '%d-%m-%Y+%H:%M')
-                                           for date_s, time_s in ((self.previous._datum, self.previous._check_uit),
-                                                                  (self._datum, self._check_in))]
+                                           for date_s, time_s in ((self.previous._Datum, self.previous._Check_uit),
+                                                                  (self._Datum, self._Check_in))]
         time_at_dest = datetime_back_in - self.datetime_out
         # print ("time at dest, arriveMinutes, departMinutes  =", time_at_dest, arriveMinutes, departMinutes)
         self.time_worked = time_at_dest - datetime.timedelta(minutes=(self.lunchMinutes + arriveMinutes + departMinutes))
         if self.time_worked <= datetime.timedelta():
             return None # quick fix for bug not looked at yet!
+        this_week_number = self.datetime_out.isocalendar()[1]
+        if cls.last_week_number != this_week_number:
+            cls.cumulative_this_week = 0.0
+            cls.last_week_number = this_week_number
+            print ("------------"*4)
+        hours_worked = self.time_worked.total_seconds() / 3600
+        bookable_raw = hours_worked + cls.held_over
+        bookable_smooth = min(bookable_raw - (bookable_raw % 0.25), cls.max_per_day)
+        cls.held_over = bookable_raw - bookable_smooth
+        print (self.datetime_out.strftime("%d-%m-%Y (%A)"), "time worked = %s = %.2f hours, bookable hours=%.2f" %
+               (str(self.time_worked)[:-3], hours_worked, bookable_smooth))
+        cls.cumulative_this_week += bookable_smooth
+        cls.period_cumulative += bookable_smooth
+        print ("week %d cumulative = %.2f hours , preiod cumulative = %.2f hours" %
+               (this_week_number, cls.cumulative_this_week, cls.period_cumulative))
         return self
 
-class OVcsvDec2018(OvCsv):
+class OvCsvoUltimaker(OvCsvo):
     werkStations =  {"Geldermalsen": 10, "'s-Hertogenbosch": 34}
 
 
 if __name__ == '__main__':
-    OVcsvDec2018.main('/home/gill/Hippos/_2018/Acco2018/Q4/transacties_18122018213743.csv')
+    OvCsvoUltimaker.main('/home/gill/Hippos/_2018/Acco2018/Q4/transacties_18122018213743.csv')

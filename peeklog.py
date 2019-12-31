@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 """
-quicky (?I hope) to read a log file as it is being written.
+Obsolete! ISDN is history! just keeping this in case I decid eto crib some stuff for other projects.
+read an ISDN  log file as it is being written.
 """
 import sys, os, time, struct
 from sendmail import sendMail

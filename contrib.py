@@ -15,7 +15,7 @@ class ContribCsvo(csvo.Csvo):
         if not self._Jaar:
             return
         try:
-            jaarGeld = Money(parse_decimal(self._Jaar.replace('€','')))
+            jaarGeld = Money(self._Jaar)
         except InvalidOperation:
             return
         jaarGeld *= Decimal((100 + self.perCentIncrease)/100)

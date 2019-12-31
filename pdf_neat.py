@@ -2,8 +2,7 @@
 # N.B. This is flawed. Thre recently added rotation stuff seems to work but the margin stuff doesn't!
 
 import sys, os
-from PyPDF2 import PdfFileWriter, PdfFileReader
-
+from PyPDF2.pdf import PdfFileWriter, PdfFileReader, PageObject
 from walker import Walker
 
 class Pdf_neat(Walker):
@@ -65,18 +64,28 @@ class Pdf_neat(Walker):
         output = PdfFileWriter()
         for ic in range(self.copies):
             for p in [input.getPage(i) for i in range(0, input.getNumPages())]:
-                for box in (p.mediaBox, p.cropBox, p.bleedBox,
-                            p.trimBox, p.artBox):
-                    box.lowerLeft = (box.getLowerLeft_x() - self.left_margin,
-                                     box.getLowerLeft_y() - self.bottom_margin)
-                    box.upperRight = (box.getUpperRight_x() + self.right_margin,
-                                      box.getUpperRight_y() + self.top_margin)
-                print(p.getContents())
+                print (p.mediaBox)
+                #for box in (p.mediaBox, p.cropBox, p.bleedBox,
+                #            p.trimBox, p.artBox):
+                if 1:
+                    for box in (p.mediaBox,):
+                        box.lowerLeft = (box.getLowerLeft_x() - self.left_margin,
+                                         box.getLowerLeft_y() - self.bottom_margin)
+                        box.upperRight = (box.getUpperRight_x() + self.right_margin,
+                                          box.getUpperRight_y() + self.top_margin)
+
                 if self.clockwise is not None:
                     p.rotateClockwise(180)
                 if self.anticlockwise is not None:
                     p.rotateCounterClockwise(180)
-                output.addPage(p)
+                print (p.mediaBox,'\n')
+                if 1:
+                    output.addPage(p)
+                else:
+                    q = PageObject.createBlankPage(input)
+                    q.mergeScaledTranslatedPage(p, )
+                    q.mergeScaledPage(p, (0.8))
+                    output.addPage(q)
         output.write(open('%s/%s%s%s' %(root_, stem_, self.tag_, ext_,), 'wb'))
         return True
 

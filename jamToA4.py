@@ -13,29 +13,37 @@ from walker import Walker
 class JamToA4(Walker):
 
     prefix_ = 'a4-'
-    scale_ = 0.90
+    sExtra = ''
 
     def process_keyword_arg(self, a):
         if a in ('-p', '--prefix'):
             prefix = sys.argv.pop(0)
+            return a
+        if a in ('-r', '--rotated'):
+            self.sExtra += f'--angle {self.next_arg(180)}'
+            return a
         if a in ('-s', '--scale'):
             parts = sys.argv.pop(0).split('%')
-            self.scale_ = float(parts.pop(0))
-            if not parts:
-                return
-            self.scale_ /= 100.0
-            if not parts.pop(0) and not parts:
-                return
-            raise ValueError("bad threshold value")
+            sScale = float(parts.pop(0))
+            if parts:
+                sScale /= 100.0
+            if parts.pop(0) or parts:
+                raise ValueError("bad threshold value")
+            self.sExtra += f'--scale {sScale}'
+            return a
         if a in ('-h', '--help'):
             print("utility to reduce letter-size PDF's to A4 size.\n"
                  "syntax:  pdf_walker.py [options] [paths]\n"
                   "special options for pdf_walker.py are: (shown quoted but must be entered unquoted!)\n"
                   "'--prefix'   or equivalently '-p'\n"
-                  "means interpret the next argument as the prefix to apply when deriving thte outputp filename.\n"
+                  "  means interpret the next argument as the prefix to apply when deriving thte output filename.\n"
+                  "'--rotate'   or equivalently '-r'\n"
+                  "  means interpret the next argument as an angle to rotate in degrees (e.g. 180 for upside-down).\n"
+                  "'--prefix'   or equivalently '-p'\n"
+                  "  means interpret the next argument as the prefix to apply when deriving thte output filename.\n"
                   "'--scale'   or equivalently '-s'\n"
-                  "means interpret the next argument as the scaling to apply (in order to get nicew but not too wide border).\n"
-                  "this may be entered as e.g. 0.8 or equivalently 80%. The default is 0.9 (90%)\n"
+                  "  means interpret the next argument as the scaling to apply (in order to get nicew but not too wide border).\n"
+                  "this may be entered as e.g. 0.8 or equivalently 80%. The default is to apply no scaling\n"
                   )
         Walker.process_keyword_arg(self, a)
 
@@ -50,8 +58,8 @@ class JamToA4(Walker):
         new_filename = os.path.join(root_, self.prefix_ + item_).replace('-.', '.')
 
         # cmd = f"pdfjam --outfile {new_filename}  --angle 180 --paper a4paper --scale {self.scale_} {old_filename}"
-        cmd = f"pdfjam --outfile {new_filename}  --paper a4paper --scale {self.scale_} {old_filename}"
-        print("converting this %s files with a one-liner: '%s'" %(ext_, cmd))
+        cmd = f"pdfjam --outfile {new_filename}  --paper a4paper {self.sExtra} {old_filename}"
+        print("converting this %s file with a one-liner: '%s'" %(ext_, cmd))
         os.system(cmd)
 
 if __name__ == '__main__':

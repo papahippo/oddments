@@ -39,10 +39,26 @@ class Walker:
     def cleanup(self):
         pass
 
+    def next_arg(self, default=None):
+        if not sys.argv:
+            return default
+        arg = sys.argv.pop(0)
+        if arg == '--':
+            return default
+        return arg
+
+    def next_keyword_arg(self):
+        arg = self.next_arg()
+        if not arg:
+            return
+        if arg[0]=='-':
+            return arg
+        sys.argv.insert(0, arg)
+
     def process_keyword_arg(self, a):
         if a in ('-v', '--verbose'):
             self.verbosity += 1
-            return
+            return a
         # making recursion optional and not the default is a "to do .. maybe" action!
         # elif a in('-r', '--recurse'):
         #    self.recurse = 1
@@ -56,11 +72,15 @@ class Walker:
         print("keyword '%s' not understood." % a)
         sys.exit(991)
 
+    def process_next_keyword_arg(self):
+        a = self.next_keyword_arg()
+        if a is not None:
+            return self.process_keyword_arg(a)
     def main(self):
         #print (os.getcwd())
         prog_path = sys.argv.pop(0)
-        while sys.argv and sys.argv[0].startswith('-'):
-            self.process_keyword_arg(sys.argv.pop(0))
+        while self.process_next_keyword_arg():
+            pass
         targets = sys.argv or ['.']
         self.vprint(1, "running '%s' on '%s'" %(prog_path, ' '.join(sys.argv)))
         for target in targets:

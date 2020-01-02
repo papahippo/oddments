@@ -43,10 +43,10 @@ class Pdf_neat(Walker):
             print("utility to apply or adjust margins of (usually A4) pages within a PDF\n"
                 "syntax:  pdf_neat.py [options] [paths]\n"
                   "special options for pdf_neat.py are (shown quoted but must be entered unquoted!):\n"
-                  "'--top-margin <int>'   or equivalently '-T <int>'\n"
-                  "'--left-margin <int>'   or equivalently '-L <int>'\n"
-                  "'--bottom-margin <int>'   or equivalently '-B <int>'\n"
-                  "'--right-margin <int>'   or equivalently '-R <int>'\n"
+                  #"'--top-margin <int>'   or equivalently '-T <int>'\n"
+                  #"'--left-margin <int>'   or equivalently '-L <int>'\n"
+                  #"'--bottom-margin <int>'   or equivalently '-B <int>'\n"
+                  #"'--right-margin <int>'   or equivalently '-R <int>'\n"
                   "'--clockwise <int>'   or equivalently '-C <int>'\n"
                   "'--anticlockwise <int>'   or equivalently '-A <int>'\n"
                   "(either of the above can be used with <int>=180 to fix wrong way up scanning!)\n"
@@ -67,7 +67,7 @@ class Pdf_neat(Walker):
                 print (p.mediaBox)
                 #for box in (p.mediaBox, p.cropBox, p.bleedBox,
                 #            p.trimBox, p.artBox):
-                if 1:
+                if 0:
                     for box in (p.mediaBox,):
                         box.lowerLeft = (box.getLowerLeft_x() - self.left_margin,
                                          box.getLowerLeft_y() - self.bottom_margin)
@@ -83,7 +83,7 @@ class Pdf_neat(Walker):
                     output.addPage(p)
                 else:
                     q = PageObject.createBlankPage(input)
-                    q.mergeScaledTranslatedPage(p, )
+                    #q.mergeScaledTranslatedPage(p, )
                     q.mergeScaledPage(p, (0.8))
                     output.addPage(q)
         output.write(open('%s/%s%s%s' %(root_, stem_, self.tag_, ext_,), 'wb'))

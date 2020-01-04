@@ -25,7 +25,10 @@ print("file: %s, pages: %s, objects: %s" % (sys.argv[1], len(doc), lenXREF - 1))
 for i in range(len(doc)):
     imglist = doc.getPageImageList(i)
     for img in imglist:
+        print(img)
         xref = img[0]  # xref number
+        cont = doc._getXrefStream(xref)
+        print(len(cont))
         pix = fitz.Pixmap(doc, xref)  # make pixmap from image
         imgcount += 1
         if pix.n < 5:  # can be saved as PNG

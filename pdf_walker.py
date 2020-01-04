@@ -21,19 +21,13 @@ class PdfWalker(Walker):
     def process_keyword_arg(self, a):
         if a in ('-f', '--fix'):
             self.fix += 1
-            return
+            return a
         if a in ('-r', '--resolution'):
-            self.resolution = int(sys.argv.pop(0))
-            return
+            self.resolution = int(self.next_arg())
+            return a
         if a in ('-t', '--threshold'):
-            parts = sys.argv.pop(0).split('%')
-            self.threshold = float(parts.pop(0))
-            if not parts:
-                return
-            self.threshold /= 100.0
-            if not parts.pop(0) and not parts:
-                return
-            raise ValueError("bad threshold value")
+            self.threshold = self.next_float_arg(0.5)
+            return a
 
         # making recursion optional and not the default is a "to do .. maybe" action!
         # elif a in('-r', '--recurse'):
@@ -49,7 +43,7 @@ class PdfWalker(Walker):
                   "'--resolution'   or equivalently '-r'\n"
                   "means interpret the next argument as the resolution to use. The default is 300.\n"
                   )
-        Walker.process_keyword_arg(self, a)
+        return Walker.process_keyword_arg(self, a)
 
     def check_images(self, effort):
         proc = Popen("pdfimages -list %s" % self.shl_pathname, stdout=PIPE, stderr=PIPE, shell=True, close_fds=True)

@@ -20,16 +20,10 @@ class JamToA4(Walker):
             prefix = sys.argv.pop(0)
             return a
         if a in ('-r', '--rotated'):
-            self.sExtra += f'--angle {self.next_arg(180)}'
+            self.sExtra += f'--angle {self.next_arg("180")}'
             return a
         if a in ('-s', '--scale'):
-            parts = sys.argv.pop(0).split('%')
-            sScale = float(parts.pop(0))
-            if parts:
-                sScale /= 100.0
-            if parts.pop(0) or parts:
-                raise ValueError("bad threshold value")
-            self.sExtra += f'--scale {sScale}'
+            self.sExtra += f'--scale {self.next_float_arg("90%")}'
             return a
         if a in ('-h', '--help'):
             print("utility to reduce letter-size PDF's to A4 size.\n"
@@ -42,10 +36,10 @@ class JamToA4(Walker):
                   "'--prefix'   or equivalently '-p'\n"
                   "  means interpret the next argument as the prefix to apply when deriving thte output filename.\n"
                   "'--scale'   or equivalently '-s'\n"
-                  "  means interpret the next argument as the scaling to apply (in order to get nicew but not too wide border).\n"
+                  "  means interpret the next argument as the scaling to apply (in order to get nice but not too wide border).\n"
                   "this may be entered as e.g. 0.8 or equivalently 80%. The default is to apply no scaling\n"
                   )
-        Walker.process_keyword_arg(self, a)
+        return Walker.process_keyword_arg(self, a)
 
 
     def handle_item(self, root_, item_, is_dir):

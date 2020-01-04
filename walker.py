@@ -55,6 +55,16 @@ class Walker:
             return arg
         sys.argv.insert(0, arg)
 
+    def next_float_arg(self, default):
+        v = self.next_arg(default)
+        parts = str(v).split('%')
+        real = float(parts.pop(0))
+        if parts:
+            real /= 100.0
+        if parts.pop(0) or parts:
+            raise ValueError("invalid real/percentrage value")
+        return real
+
     def process_keyword_arg(self, a):
         if a in ('-v', '--verbose'):
             self.verbosity += 1

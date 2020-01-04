@@ -6,7 +6,6 @@ import img2pdf
 class JpegsToPDF(Walker):
 
     name_ =  "multiple jpegs to single multi-page PDF converter"
-    tag_ = '-A4L'
     pendingJpegFileNames = []
 
     def goes_to_same_PDF(self, stem_):

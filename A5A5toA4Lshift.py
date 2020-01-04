@@ -15,10 +15,10 @@ class A5A5toA4L(Walker):
     def process_keyword_arg(self, a):
         if a in ('-L', '--lower-only'):
             self.lower_only += 1
-            return
+            return a
         if a in ('-U', '--upper-only'):
             self.upper_only += 1
-            return
+            return a
         if a in ('-h', '--help'):
             print("utility to convert 1 or 2 A5L images on a A4P page to separate A$ landscape images\n"
                 "syntax:  A5A5toA4L [options] [paths]\n"
@@ -26,7 +26,7 @@ class A5A5toA4L(Walker):
                   "'--upper-only'   or equivalently '-U'\n"
                   "'--lower-only'   or equivalently '-L'\n"
                   )
-        Walker.process_keyword_arg(self, a)
+        return Walker.process_keyword_arg(self, a)
 
     def handle_item(self, root_, item_, is_dir):
         print(root_, item_)

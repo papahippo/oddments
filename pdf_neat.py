@@ -20,25 +20,25 @@ class Pdf_neat(Walker):
     def process_keyword_arg(self, a):
         if a[1:].isnumeric():
             self.copies = int(a[1:])
-            return
+            return a
         if a in ('-T', '--top-margin'):
             self.top_margin = int(sys.argv.pop(0))
-            return
+            return a
         if a in ('-L', '--left-margin'):
             self.left_margin = int(sys.argv.pop(0))
-            return
+            return a
         if a in ('-B', '--bottom-margin'):
             self.bottom_margin = int(sys.argv.pop(0))
-            return
+            return a
         if a in ('-R', '--right-margin'):
             self.right_margin = int(sys.argv.pop(0))
-            return
+            return a
         if a in ('-C', '--clockwise'):
             self.clockwise = sys.argv and int(sys.argv.pop(0)) or 180
-            return
+            return a
         if a in ('-A', '--anticlockwise'):
             self.anticlockwise = sys.argv and int(sys.argv.pop(0)) or 180
-            return
+            return a
         if a in ('-h', '--help'):
             print("utility to apply or adjust margins of (usually A4) pages within a PDF\n"
                 "syntax:  pdf_neat.py [options] [paths]\n"
@@ -52,7 +52,7 @@ class Pdf_neat(Walker):
                   "(either of the above can be used with <int>=180 to fix wrong way up scanning!)\n"
                   "an arguments like '-2' means concatenate (in this case 2) copies of the resulting PDF\n"
                   )
-        Walker.process_keyword_arg(self, a)
+        return Walker.process_keyword_arg(self, a)
 
     def handle_item(self, root_, item_, is_dir):
         print(root_, item_)

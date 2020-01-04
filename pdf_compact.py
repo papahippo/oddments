@@ -16,8 +16,8 @@ class Pdf_compact(Walker):
 
     def process_keyword_arg(self, a):
         if a in ('-t', '--threshold'):
-            self.threshold = int(sys.argv.pop(0))
-            return
+            self.threshold = int(self.next_keyword_arg(50))
+            return a
         if a in ('-h', '--help'):
             print("utility to convert images within a PDF to a more compact format\n"
                 "syntax:  pdf_compact.py [options] [paths]\n"
@@ -25,7 +25,7 @@ class Pdf_compact(Walker):
                   "'--threshold'   or equivalently '-t'\n"
                   "means interpret the next argument as the black threshold for conversion to mono ('lineart')\n"
                   )
-        Walker.process_keyword_arg(self, a)
+        return Walker.process_keyword_arg(self, a)
 
     def handle_item(self, root_, item_, is_dir):
         self.vprint(1, root_, item_)

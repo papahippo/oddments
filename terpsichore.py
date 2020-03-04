@@ -202,10 +202,11 @@ current_voice = default_voice = Voice()
 class _Instrument(musicItem):
     """ distinction between instrument and voice rather iffy at present!
     """
-    def __init__(self, clef=Clef.Treble, strings=None, real_name=None):
+    def __init__(self, clef=Clef.Treble, strings=None, real_name=None, midi_program=0):
         self.strings = strings
         self.real_name = real_name
         self.clef = clef
+        self.midi_program = midi_program
 
     def __repr__(self):
         s = self.strings and "(%s strings)" %len(self.strings) or ""
@@ -213,10 +214,12 @@ class _Instrument(musicItem):
 class Instrument(musicGroup):
     pass
 
-def add_Instrument(real_name='ANInstrumment', python_name=None, clef=Clef.Treble, strings=None):
+def add_Instrument(real_name='ANInstrumment', python_name=None,
+                   clef=Clef.Treble, strings=None, midi_program=0):
     if not python_name:
         python_name = real_name.replace(' ', '_').replace('#', 'i')
-    setattr(Instrument, python_name, _Instrument(real_name=real_name, clef=clef, strings=strings))
+    setattr(Instrument, python_name, _Instrument(real_name=real_name, clef=clef,
+                                                 strings=strings, midi_program=midi_program))
     
 def isInstrument(entity):
     return isinstance(entity, _Instrument)
@@ -224,7 +227,7 @@ def isInstrument(entity):
 add_Instrument('Guitar', strings=(Note.E2, Note.A2, Note.D3, Note.G3, Note.B3, Note.E4))
 add_Instrument('Violin', strings=(Note.G3, Note.D4, Note.A4, Note.E5))
 add_Instrument('Viola',  strings=(Note.C3, Note.G3, Note.D4, Note.A4))
-add_Instrument('Chello', strings=(Note.C2, Note.G2, Note.D3, Note.A3))
+add_Instrument('Cello', strings=(Note.C2, Note.G2, Note.D3, Note.A3), midi_program=42)  #  43)
 
 # following two 'instruments' are dubious but handy at this stage of development:
 

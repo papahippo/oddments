@@ -10,7 +10,6 @@ args = [
     "-sDEVICE=pdfwrite",
     "-sstdout=%stderr",
     "-sOutputFile=" + sys.argv[2],
-    "-c", ".setpdfwrite",
     "-f", sys.argv[1]
 ]
 

@@ -38,7 +38,7 @@ with mido.open_output(port_name, autoreset=True) as port:
         finger, pitch_offset = random.choice(fingers_and_their_pitch_offsets)
         pitch = string.GetPitch() + pitch_offset
         note = notes_by_Pitch[pitch][0]  # 0 => favour sharps over flats
-        print(f"fingering {finger}    {note}")
+        print(f"({open_string_name} string)  finger: {finger}  {note}")
         time.sleep(0.1)
         on = Message('note_on', note=pitch)
         port.send(on)

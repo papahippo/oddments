@@ -1,16 +1,21 @@
 import curses
+import os
 
-screen = curses.initscr()
-curses.noecho()
-curses.curs_set(0)
-screen.keypad(1)
+def main(win):
+    win.nodelay(True)
+    key=""
+    win.clear()
+    win.addstr("Detected key:")
+    while 1:
+        try:
+           key = win.getkey()
+           win.clear()
+           win.addstr("Detected key:")
+           win.addstr(str(key))
+           if key == os.linesep:
+              break
+        except Exception as e:
+           # No input
+           pass
 
-while 1:
-    screen.addstr("Press a key")
-    key = screen.getch()
-    if key == curses.KEY_LEFT:
-        print("Left Arrow Key pressed")
-    elif key == curses.KEY_RIGHT:
-        print("Right Arrow Key pressed")
-    else:
-        print(key)
+curses.wrapper(main)

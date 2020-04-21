@@ -30,20 +30,26 @@ else:
 
 fingers_and_their_pitch_offsets = list(enumerate([0, 2, 3, 4, 5]))  # beginners only!
 
-with mido.open_output(port_name, autoreset=True) as port:
-    select_instrument_sound = Message('program_change', program=instrument.midi_program, time=0)
-    print(f"selecting MID program {instrument.midi_program}")
-    port.send(select_instrument_sound)
-    while True:
-        finger, pitch_offset = random.choice(fingers_and_their_pitch_offsets)
-        pitch = string.GetPitch() + pitch_offset
-        note = notes_by_Pitch[pitch][0]  # 0 => favour sharps over flats
-        print(f"({open_string_name} string)  finger: {finger}  {note}")
-        time.sleep(0.1)
-        on = Message('note_on', note=pitch)
-        port.send(on)
-        time.sleep(on_time)
+if 0:
+    with mido.open_output(port_name, autoreset=True) as port:
+        select_instrument_sound = Message('program_change', program=instrument.midi_program, time=0)
+        print(f"selecting MID program {instrument.midi_program}")
+        port.send(select_instrument_sound)
+        while True:
+            finger, pitch_offset = random.choice(fingers_and_their_pitch_offsets)
+            pitch = string.GetPitch() + pitch_offset
+            note = notes_by_Pitch[pitch][0]  # 0 => favour sharps over flats
+            print(f"({open_string_name} string)  finger: {finger}  {note}")
+            time.sleep(0.1)
+            on = Message('note_on', note=pitch)
+            port.send(on)
+            time.sleep(on_time)
 
-        off = Message('note_off', note=pitch)
-        port.send(off)
+            off = Message('note_off', note=pitch)
+            port.send(off)
+if 0:
+    while 1:
+        k = keyboard.read_key()
+        print(k)
+
 print("That's all folks!!")

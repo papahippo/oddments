@@ -11,27 +11,28 @@ import random
 from terpsichore import *
 import mido
 from mido import Message
+from pynput import keyboard
+from queue import Empty
+def main():
+    instrument = Instrument.Cello
+    program_number = 43
 
-instrument = Instrument.Cello
-program_number = 43
+    program_name = sys.argv and sys.argv.pop(0) or "unknown program"
+    on_time = sys.argv and float(sys.argv.pop(0)) or 1.5  # seconds
+    open_string_name = sys.argv and sys.argv.pop(0) or 'D'
+    port_name = sys.argv and sys.argv.pop(0) or 'TiMidity port 0'
+    print(f"running '{program_name}' assuming fingers on '{open_string_name}' string;using MIDI port '{port_name}'")
 
-program_name = sys.argv and sys.argv.pop(0) or "unknown program"
-on_time = sys.argv and float(sys.argv.pop(0)) or 1.5  # seconds
-open_string_name = sys.argv and sys.argv.pop(0) or 'D'
-port_name = sys.argv and sys.argv.pop(0) or 'TiMidity port 0'
-print(f"running '{program_name}' assuming fingers on '{open_string_name}' string;using MIDI port '{port_name}'")
+    for string in instrument.strings:
+        if string.real_name.startswith(open_string_name):
+            break
+    else:
+        print(f"A {instrument} with a '{open_string_name}' string?  I don't think so!")
+        sys.exit(990)
 
-for string in instrument.strings:
-    if string.real_name.startswith(open_string_name):
-        break
-else:
-    print(f"A {instrument} with a '{open_string_name}' string?  I don't think so!")
-    sys.exit(990)
+    fingers_and_their_pitch_offsets = list(enumerate([0, 2, 3, 4, 5]))  # beginners only!
 
-fingers_and_their_pitch_offsets = list(enumerate([0, 2, 3, 4, 5]))  # beginners only!
-
-if 0:
-    with mido.open_output(port_name, autoreset=True) as port:
+    with mido.open_output(port_name, autoreset=True) as port, keyboard.Events() as events:
         select_instrument_sound = Message('program_change', program=instrument.midi_program, time=0)
         print(f"selecting MID program {instrument.midi_program}")
         port.send(select_instrument_sound)
@@ -43,13 +44,14 @@ if 0:
             time.sleep(0.1)
             on = Message('note_on', note=pitch)
             port.send(on)
-            time.sleep(on_time)
-
+            try:
+                event = events.get(on_time)
+                print(event.key)
+            except Empty:
+                event = None
             off = Message('note_off', note=pitch)
             port.send(off)
-if 0:
-    while 1:
-        k = keyboard.read_key()
-        print(k)
+    print("That's all folks!!")
 
-print("That's all folks!!")
+if __name__=="__main__":
+    main()

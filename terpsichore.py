@@ -160,7 +160,7 @@ class Voice(musicItem):
         if isinstance(note_or_number, Note_):
             return note_or_number # note, thus
         elif isinstance(note_or_number, int):
-            return notes_by_Pitch[note_or_number][self.key.fifths<0]
+            return notes_by_Pitch[note_or_number][int(self.key.fifths<0)]
         elif isinstance(note_or_number, float):
             #return notes_by_Pitch[int(note_or_number)][self.key.fifths<0]
             i_near = int(note_or_number+0.5)
@@ -244,5 +244,6 @@ def best_note_name_for_pitch(i):
 #print Instrument.__dict__.values()
 
 if __name__ == '__main__':
-    print (Note.A3, Note.B4, [(notes_by_Pitch[i],'\n') for i in range(56,62)])
-    print ([best_note_name_for_pitch(i) for i in range(50,70)])
+    # print (Note.A3, Note.B4, '\n')
+    print (*[notes_by_Pitch[i][0] for i in range(56,62)], sep='\n')
+    # print ([best_note_name_for_pitch(i) for i in range(50,70)])

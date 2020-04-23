@@ -46,7 +46,7 @@ class Fortuna440(object):
         try:
             self.inputDeviceIndex = eval(sys.argv[1])
         except IndexError:
-            self.inputDeviceIndex = 6
+            self.inputDeviceIndex = 4
 
         # Initialize PyAudio
         self.pyaud = pyaudio.PyAudio()

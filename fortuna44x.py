@@ -140,10 +140,6 @@ class Fortuna440(object):
             pygame.time.wait(200)
             avgNote, pitch, volume = None, None, None
         self.screen.fill(self.background_colour)
-# BEGIN QUCIK FIX!
-#        if pitch is not None:
-#            pitch -=3 # defaulkt to Eb horn!
-# END QUCIK FIX!
 
         if pitch and (97>pitch>=20) and volume and (volume>= self.volumeThreshold):
             print(avgNote, volume)
@@ -152,7 +148,7 @@ class Fortuna440(object):
             self.pp = numpy.append(self.pp, pitch)
 
         for iPitch in range(32, 97):
-            print("iPitch =", iPitch)
+            # print("iPitch =", iPitch)
             note = default_voice.GetNote(iPitch)
             notelet= self.littleFont.render(str(note.real_name), 0, (180, 180, 80))
             name, pitch = note.real_name, note.pitch

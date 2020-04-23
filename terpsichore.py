@@ -165,7 +165,7 @@ class Voice(musicItem):
             #return notes_by_Pitch[int(note_or_number)][self.key.fifths<0]
             i_near = int(note_or_number+0.5)
             #return str(i_near)
-            note_near = notes_by_Pitch[i_near][self.key.fifths<0]
+            note_near = notes_by_Pitch[i_near][int(self.key.fifths<0)]
             miss = note_or_number - i_near
             if miss > 0.1:
                 s_miss = '+'

@@ -46,7 +46,7 @@ class Fortuna440(object):
         try:
             self.inputDeviceIndex = eval(sys.argv[1])
         except IndexError:
-            self.inputDeviceIndex = 6
+            self.inputDeviceIndex = 4
 
         # Initialize PyAudio
         self.pyaud = pyaudio.PyAudio()
@@ -104,6 +104,7 @@ class Fortuna440(object):
             # On my system, device 1 is a USB microphone, your number may differ.
             # Open sound input before pygame, otherwise pygame hogs sounds
             self.latest_volume = 0
+            self.latest_pitch = -1  # delieratly impossible
             try:
                 self.stream = self.pyaud.open(
                     format = pyaudio.paInt16,
@@ -141,11 +142,16 @@ class Fortuna440(object):
             avgNote, pitch, volume = None, None, None
         self.screen.fill(self.background_colour)
 
-        if pitch and (97>pitch>=20) and volume and (volume>= self.volumeThreshold):
+        if volume and (volume>= self.volumeThreshold):
+            #if (pitch and (97>pitch>=10) and abs(pitch - self.latest_pitch) < 1.0
             print(avgNote, volume)
-            self.latest_volume = volume            
-            self.latest_note = avgNote
-            self.pp = numpy.append(self.pp, pitch)
+            self.latest_volume = volume
+            if pitch and (64 > pitch >= 10) and (abs(pitch - self.latest_pitch) < 1.0):
+                self.latest_note = avgNote
+                self.pp = numpy.append(self.pp, pitch)
+            else:
+                print('rejected!')
+            self.latest_pitch = pitch or -1
 
         for iPitch in range(32, 97):
             # print("iPitch =", iPitch)

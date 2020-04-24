@@ -28,7 +28,7 @@ class Note_(musicItem):
             aPitch = 69 + 12 * math.log((frequency / 440.0), 2.0)
             octave = int(aPitch/12)-1
             pitch = aPitch - 12*(octave+1)
-            print (aPitch, pitch, octave)
+            # print (aPitch, pitch, octave)
         self.pitch = pitch
         self.octave = octave
         self.length = length
@@ -186,11 +186,11 @@ class Voice(musicItem):
             fftAmplitudes = fftAmplitudes[indexMaxAmplitude-spread:indexMaxAmplitude+spread+1]
             fftFrequencies = fftFrequencies[indexMaxAmplitude-spread:indexMaxAmplitude+spread+1]
             total = numpy.sum(fftAmplitudes)
-            print ("total", total)
+            # print ("total", total)
             volume = math.log(total+1, 2.0)
             avgFrequency = numpy.sum(fftFrequencies*fftAmplitudes)/total
             absPitch = 69 + 12 * math.log((avgFrequency / concertPitch), 2.0)
-            print  ("absPitch =", absPitch)
+            # print  ("absPitch =", absPitch)
             try:
                 avgNote = self.GetNote(absPitch, transpose=transpose)
             except:

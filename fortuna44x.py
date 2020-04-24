@@ -27,7 +27,7 @@ class Fortuna440(object):
     x9_trace = width - (pianoKeyDepth+horizLength+26)
     state = 0
     useFFT = analyse is None
-    volumeThreshold  = 8
+    volumeThreshold  = 10
     
     def __init__(self):
         pygame.init()
@@ -46,7 +46,7 @@ class Fortuna440(object):
         try:
             self.inputDeviceIndex = eval(sys.argv[1])
         except IndexError:
-            self.inputDeviceIndex = 4
+            self.inputDeviceIndex = 6
 
         # Initialize PyAudio
         self.pyaud = pyaudio.PyAudio()

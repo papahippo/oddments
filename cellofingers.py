@@ -18,7 +18,7 @@ def main():
     program_number = 43
 
     program_name = sys.argv and sys.argv.pop(0) or "unknown program"
-    on_time = sys.argv and float(sys.argv.pop(0)) or 1.5  # seconds
+    on_time = sys.argv and float(sys.argv.pop(0)) or None # 1.5  # seconds
     open_string_name = sys.argv and sys.argv.pop(0) or 'D'
     port_name = sys.argv and sys.argv.pop(0) or 'TiMidity port 0'
     print(f"running '{program_name}' assuming fingers on '{open_string_name}' string;using MIDI port '{port_name}'")

@@ -14,7 +14,7 @@ class MicrophoneRecorder():
                             channels=1,
                             rate=FS,
                             input=True,
-                            # input_device_index=4,
+                            input_device_index=4,
                             frames_per_buffer=CHUNKSZ)
 
     def read(self):

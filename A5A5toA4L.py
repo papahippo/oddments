@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 import copy, sys, os
-from PyPDF2 import PdfFileWriter, PdfFileReader
+from PyPDF2 import PdfFileWriter, PdfFileReader, pdf
 
 from walker import Walker
+
+root2 = 2.0**0.5
+
 
 class A5A5toA4L(Walker):
 
@@ -40,13 +43,15 @@ class A5A5toA4L(Walker):
             (w, h) = p.mediaBox.upperRight
             #p.scaleBy(1.4142)
             #p.rotateCounterClockwise(90)
-            print('##', p.mediaBox)
-            print('!!!!!!', w, h)
-            p.mediaBox.lowerRight = (w, h / 2)
+            print('#p1', p.mediaBox)
+            #p.mediaBox.lowerRight = (w, h / 2)
             q.mediaBox.upperRight = (w, h / 2)
             if not self.lower_only:
-                output.addPage(p)
-            if not self.upper_only:
+                r = pdf.PageObject.createBlankPage(input)
+                r.mergeRotatedScaledPage(p, 90.0, root2)
+                output.addPage(r)
+            if 0:  # not self.upper_only:
+                q.scale(root2, root2)
                 output.addPage(q)
         output.write(open('%s/%s%s%s' %(root_, stem_, self.tag_, ext_,), 'wb'))
         return True

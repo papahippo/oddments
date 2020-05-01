@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import sys, os, re
+import os
 
-from walker import Walker
+from walker.walker import Walker
 
 class SLinkWalker(Walker):
 

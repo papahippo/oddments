@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # WARNING: I have abandoned this approach 'for now'!
 #
-import copy, sys, os
+import os
 from PyPDF2 import PdfFileWriter, PdfFileReader
 from PIL import Image
 
@@ -10,7 +10,9 @@ from walker import Walker
 class Pdf_compact(Walker):
 
     name_ =  "converter of images embedded within a PDF to a more compact format"
-    tag_ = '-compact'
+    myExts = ('.pdf',)
+    prefix_ = 'compact-'
+
     threshold_ = 50
     copies_ = 1
 
@@ -28,12 +30,7 @@ class Pdf_compact(Walker):
         return Walker.process_keyword_arg(self, a)
 
     def handle_item(self, root_, item_, is_dir):
-        self.vprint(1, root_, item_)
-        Walker.handle_item(self, root_, item_, is_dir)
-        stem_, ext_ = os.path.splitext(item_)
-        if is_dir or ext_.lower() not in ('.pdf',) or stem_.endswith(self.tag_):
-            return None
-        input = PdfFileReader(open('%s/%s' %(root_, item_), 'rb'), strict=False)
+        input = PdfFileReader(open(f'{root_}/{item_}', 'rb'), strict=False)
         output = PdfFileWriter()
         np = input.getNumPages()
         self.vprint(1, "input PDF contains %d page(s)" % np)
@@ -67,7 +64,7 @@ class Pdf_compact(Walker):
                 #self.vprint(1, "rect =", rect)
 
         outCount = output.getNumPages()
-        outName =  '%s/%s%s.pdf'  %(root_, stem_, self.tag_, imgcount)
+        outName =  f"{root_}/{self.prefix_}{self.stem_}{self.ext_}"  # ?? imgcount removed...
         output.write(open(outName, 'wb'))
         print ("written", outCount, "pages to", outName)
         return True

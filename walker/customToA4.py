@@ -3,7 +3,7 @@
 Yet another PDF maipualtion utility. This can be tweaked at source, e.g scaling A5 input by 1.41 to produce decent
 size A4 output.
 """
-import copy, sys, os
+import os
 from PyPDF2 import PdfFileWriter, PdfFileReader
 
 from walker import Walker
@@ -11,15 +11,13 @@ from walker import Walker
 class CustomToA4(Walker):
 
     name_ =  "customPDF converter for pages that aren't quite A4"
-    tag_ = '-A4'
+    prefix_ = 'A4-'
+    myExts = ('.pdf',)
 
     def handle_item(self, root_, item_, is_dir):
-        print(root_, item_)
-        Walker.handle_item(self, root_, item_, is_dir)
-        stem_, ext_ = os.path.splitext(item_)
-        if is_dir or ext_.lower() not in ('.pdf',) or stem_.endswith(self.tag_):
-            return None
-        input = PdfFileReader(open('%s/%s' %(root_, item_), 'rb'))
+        if not Walker.handle_item(self, root_, item_, is_dir):
+            return
+        input = PdfFileReader(open(f'{root_}/{item_}', 'rb'))
         output = PdfFileWriter()
         for p in [input.getPage(i) for i in range(0, input.getNumPages())]:
             (w, h) = p.mediaBox.upperRight
@@ -31,7 +29,7 @@ class CustomToA4(Walker):
             #p.mediaBox.upperRight = (w-30, h-30)
             #p.scale(1.41, 1.41)
             output.addPage(p)
-        output.write(open('%s/%s%s%s' %(root_, stem_, self.tag_, ext_,), 'wb'))
+        output.write(open(f"{root_}/{self.prefix_}{item_}", 'wb'))
         return True
 
 

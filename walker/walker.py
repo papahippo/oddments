@@ -7,21 +7,27 @@ import sys, os, shlex
 class Walker:
     name_ = "dummy walker"
     verbosity = recurse = 0
+    prefix_ = ''   # maybe None better but this lazier
+    myExts = ()
 
     def vprint(self, this_verbosity, *pp, **kw):
         if self.verbosity >= this_verbosity:
             return print(*pp, **kw)
 
-    def handle_file(self, root_, filename_):
-        self.vprint(2, self.name_, 'handle_file', root_, filename_)
-        return False
-
-    def handle_item(self, root_, item_name, is_dir):
-        self.vprint(2, self.name_, 'isdir=%u' % is_dir, root_, item_name)
-        self.composite_pathname = os.path.join(root_, item_name)
+    def handle_item(self, root_, item_, is_dir):
+        # sub-classes of Walker are not compelled to call this; but it can be convenient!
+        if is_dir:
+            return None
+        self.stem_, self.ext_ = os.path.splitext(item_)
+        if self.myExts and self.ext_.lower() not in self.myExts:
+            return False
+        if self.prefix_ and self.stem_.startswith(self.prefix_):
+            return False
+        self.vprint(2, self.name_, 'isdir=%u' % is_dir, root_, item_)
+        self.composite_pathname = os.path.join(root_, item_)
         self.shl_pathname = shlex.quote(self.composite_pathname)
-        os.system("ls -l %s" % os.path.normpath(self.shl_pathname))
-        return False
+        #os.system("ls -l %s" % os.path.normpath(self.shl_pathname))
+        return True
 
     def walk(self, target):
         if not os.path.isdir(target):
@@ -30,7 +36,7 @@ class Walker:
             return
 
         self.vprint(1, "walking through target:", target)
-        for root_, dirs_, files_ in os.walk(target):
+        for root_, dirs_, files_ in os.walk(target, topdown=True):
             for items_, isdir_ in ((dirs_, True), (files_, False),):
                 for item_ in items_:
                     self.handle_item(root_, item_, isdir_)
@@ -66,18 +72,22 @@ class Walker:
         return real
 
     def process_keyword_arg(self, a):
-        if a in ('-v', '--verbose'):
+        if a in ('-V', '--verbose'):
             self.verbosity += 1
             return a
-        # making recursion optional and not the default is a "to do .. maybe" action!
-        # elif a in('-r', '--recurse'):
-        #    self.recurse = 1
-        #    continue
-        if a in ('-h', '--help'):
-            print("all utilities based around the 'Walker' class (also) accept the arguments (don't enter the quotes!):\n"
-                  "'--verbose'   or equivalently '-v'\n"
+        # making recursion optional and not the default; work in progress!
+        if a in('-R', '--recurse'):
+            self.recurse = 1
+            return a
+        if a in('-P', '--prefix'):
+            self.prefix = self.next_arg
+            return a
+        # unrecognized args follow through to....
+        print("all utilities based around the 'Walker' class (also) accept the arguments (don't enter the quotes!):\n"
+                  "'--verbose'   or equivalently '-V'\n"
                   "which may be repeated for even more verbosity (explanatory textual output)."
                   )
+        if a in ('-H', '--help'):
             sys.exit(0)
         print("keyword '%s' not understood." % a)
         sys.exit(991)

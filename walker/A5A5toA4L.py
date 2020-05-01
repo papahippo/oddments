@@ -6,16 +6,18 @@ from walker import Walker
 class A5A5toA4L(Walker):
 
     name_ =  "2xA5 landscape (on 1 A4 page) to 2 A4 landscape pages converter"
-    tag_ = '-A4L'
-    lower_only = 0
-    upper_only = 0
-    split = 0.4
+    prefix_ = 'A4L-'
+    myExts = ('.pdf',)
+    lower_only = False
+    upper_only = False
+    split = 0.5
+
     def process_keyword_arg(self, a):
         if a in ('-L', '--lower-only'):
-            self.lower_only += 1
+            self.lower_only = True
             return a
         if a in ('-U', '--upper-only'):
-            self.upper_only += 1
+            self.upper_only = True
             return a
         if a in ('-S', '--split'):
             self.split = self.next_float_arg(0.5)
@@ -34,12 +36,8 @@ class A5A5toA4L(Walker):
         return Walker.process_keyword_arg(self, a)
 
     def handle_item(self, root_, item_, is_dir):
-        print(root_, item_)
-        Walker.handle_item(self, root_, item_, is_dir)
-        stem_, ext_ = os.path.splitext(item_)
-        if is_dir or ext_.lower() not in ('.pdf',) or stem_.endswith(self.tag_):
-            return None
-        print(f'{root_}/{item_}')
+        if not Walker.handle_item(self, root_, item_, is_dir):
+            return
         src = fitz.open(f'{root_}/{item_}')
         dest = fitz.open()  # output initally empty!
         for spage in src:  # for each page in input
@@ -69,7 +67,7 @@ class A5A5toA4L(Walker):
                                         reuse_xref=xref)  # copy input page once only
 
         # that's it, save output file
-        dest.save(f"{stem_}{self.tag_}{ext_}",
+        dest.save(f"{root_}/{self.prefix_}{item_}",
                  garbage=4,  # eliminate duplicate objects
                  deflate=True)  # compress stuff where possible
         return True

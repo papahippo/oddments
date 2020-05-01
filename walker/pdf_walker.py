@@ -7,7 +7,7 @@ N.B. There is considerable overlap in functionality between this scriprt and odd
 import sys, os, re
 from subprocess import Popen, PIPE, TimeoutExpired, call
 
-from walker import Walker
+from walker.walker import Walker
 
 class PdfWalker(Walker):
 

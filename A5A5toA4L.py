@@ -9,7 +9,7 @@ class A5A5toA4L(Walker):
     tag_ = '-A4L'
     lower_only = 0
     upper_only = 0
-
+    split = 0.4
     def process_keyword_arg(self, a):
         if a in ('-L', '--lower-only'):
             self.lower_only += 1
@@ -17,12 +17,19 @@ class A5A5toA4L(Walker):
         if a in ('-U', '--upper-only'):
             self.upper_only += 1
             return a
+        if a in ('-S', '--split'):
+            self.split = self.next_float_arg(0.5)
+            return a
         if a in ('-h', '--help'):
             print("utility to convert 1 or 2 A5L images on a A4P page to separate A$ landscape images\n"
                 "syntax:  A5A5toA4L [options] [paths]\n"
                   "special options for A5A5toA4L are (shown quoted but must be entered unquoted!):\n"
                   "'--upper-only'   or equivalently '-U'\n"
                   "'--lower-only'   or equivalently '-L'\n"
+                  "'--split'   or equivalently '-S'\n"
+                  "means interpret the next argument as how far down the page to split the page.\n"
+                  "this may be entered as e.g. 0.6 or equivalently 60%. The default is 0.5 (50%).\n"
+                  "note that value other than 0.5 distort the vertical scaling of the output pages."
                   )
         return Walker.process_keyword_arg(self, a)
 
@@ -43,8 +50,8 @@ class A5A5toA4L(Walker):
             # --------------------------------------------------------------------------
             # example: cut input page into 2 x 2 parts
             # --------------------------------------------------------------------------
-            rTop = r - (0, 0, 0, r.height * 0.5)
-            rBottom = r + (0, r.height * 0.5, 0, 0)
+            rTop = r - (0, 0, 0, r.height*(1-self.split))
+            rBottom = r + (0, r.height*self.split, 0, 0)
 
             for rx in [rect for rect, exclude in
                        ((rTop, self.lower_only), (rBottom, self.upper_only)) if not exclude]:

@@ -54,9 +54,9 @@ class A5A5toA4L(Walker):
             for rx in [rect for rect, exclude in
                        ((rTop, self.lower_only), (rBottom, self.upper_only)) if not exclude]:
                 rx += d  # add the CropBox displacement
-                page = dest.newPage(-1,  # new output page with rx dimensions
-                                   width=r.height,  # r.width,
-                                   height=r.width)  # r.height)
+                page = dest.newPage(-1,  width=842, height=595) # = A4L
+                                   #  #width=r.height,  # r.width,
+                                   # height=r.width)  # r.height)
                 #        width = rx.width,
                 #        height = rx.height)
                 xref = page.showPDFpage(page.rect,  # fill all new page with the image
@@ -67,7 +67,7 @@ class A5A5toA4L(Walker):
                                         reuse_xref=xref)  # copy input page once only
 
         # that's it, save output file
-        dest.save(f"{root_}/{self.prefix_}{item_}",
+        dest.save(os.path.join(root_, self.prefix_+item_),
                  garbage=4,  # eliminate duplicate objects
                  deflate=True)  # compress stuff where possible
         return True

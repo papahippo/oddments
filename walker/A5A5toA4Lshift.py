@@ -3,7 +3,7 @@
 import copy, os
 from PyPDF2 import PdfFileWriter, PdfFileReader
 
-from walker.walker import Walker
+from walker import Walker
 
 class A5A5toA4L(Walker):
 
@@ -33,7 +33,7 @@ class A5A5toA4L(Walker):
     def handle_item(self, root_, item_, is_dir):
         if not Walker.handle_item(self, root_, item_, is_dir):
             return
-        input = PdfFileReader(open(f'{root_}/{item_}', 'rb'))
+        input = PdfFileReader(open(self.full_source_name, 'rb'))
         output = PdfFileWriter()
         for p in [input.getPage(i) for i in range(0, input.getNumPages())]:
             q = copy.copy(p)
@@ -50,7 +50,7 @@ class A5A5toA4L(Walker):
                 output.addPage(p)
             if not self.upper_only:
                 output.addPage(q)
-        output.write(open(f"{root_}/{self.prefix_}{item_}", 'wb'))
+        output.write(open(self.full_dest_name, 'wb'))
         return True
 
 

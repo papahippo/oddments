@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # WARNING: I have abandoned this approach 'for now'!
 #
-import os
 from PyPDF2 import PdfFileWriter, PdfFileReader
 from PIL import Image
 
@@ -30,7 +29,9 @@ class Pdf_compact(Walker):
         return Walker.process_keyword_arg(self, a)
 
     def handle_item(self, root_, item_, is_dir):
-        input = PdfFileReader(open(f'{root_}/{item_}', 'rb'), strict=False)
+        if not Walker.handle_item(self, root_, item_, is_dir):
+            return
+        input = PdfFileReader(open(self.full_source_name, 'rb'), strict=False)
         output = PdfFileWriter()
         np = input.getNumPages()
         self.vprint(1, "input PDF contains %d page(s)" % np)
@@ -64,9 +65,9 @@ class Pdf_compact(Walker):
                 #self.vprint(1, "rect =", rect)
 
         outCount = output.getNumPages()
-        outName =  f"{root_}/{self.prefix_}{self.stem_}{self.ext_}"  # ?? imgcount removed...
-        output.write(open(outName, 'wb'))
-        print ("written", outCount, "pages to", outName)
+        # outName =  f"{root_}/{self.prefix_}{self.stem_}{self.ext_}"  # ?? imgcount removed...
+        output.write(open(self.full_output_name, 'wb'))
+        print (f"written {outCount} pages to {self.full_output_name}")
         return True
 
 

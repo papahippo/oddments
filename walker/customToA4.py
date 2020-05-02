@@ -17,19 +17,19 @@ class CustomToA4(Walker):
     def handle_item(self, root_, item_, is_dir):
         if not Walker.handle_item(self, root_, item_, is_dir):
             return
-        input = PdfFileReader(open(f'{root_}/{item_}', 'rb'))
+        input = PdfFileReader(open(self.full_source_name, 'rb'))
         output = PdfFileWriter()
         for p in [input.getPage(i) for i in range(0, input.getNumPages())]:
             (w, h) = p.mediaBox.upperRight
             print("w=%d h=%d" %(w, h))
             #p.mediaBox.lowerLeft = (0, 400)
-            p.mediaBox.upperRight = (w*0.75, h)
+            p.mediaBox.upperRight = (float(w)*0.75, h)
             p.mediaBox.lowerLeft = (-20, 0)
             #.mediaBox.upperRight = (w-30, h-30)
             #p.mediaBox.upperRight = (w-30, h-30)
             #p.scale(1.41, 1.41)
             output.addPage(p)
-        output.write(open(f"{root_}/{self.prefix_}{item_}", 'wb'))
+        output.write(open(self.full_dest_name, 'wb'))
         return True
 
 

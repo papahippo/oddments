@@ -7,7 +7,7 @@ on the scanner I ensured no part of the image was lost... but I need to distribu
  (for filing in ring-binders).
 """
 import sys,os
-from walker.walker import Walker
+from walker import Walker
 
 
 class JamToA4(Walker):
@@ -45,12 +45,11 @@ class JamToA4(Walker):
 
 
     def handle_item(self, root_, item_, is_dir):
-        old_filename = f'{root_}/{item_}'
-        new_filename = f"{root_}/{self.prefix_}{item_}"
+        if not Walker.handle_item(self, root_, item_, is_dir):
+            return
 
-        # cmd = f"pdfjam --outfile {new_filename}  --angle 180 --paper a4paper --scale {self.scale_} {old_filename}"
-        cmd = f"pdfjam --outfile {new_filename}  --paper a4paper {self.sExtra} {old_filename}"
-        print("converting thisfile with a one-liner: '{cmd}'")
+        cmd = f"pdfjam --outfile {self.shell_dest_name}  --paper a4paper {self.sExtra} {self.shell_source_name}"
+        self.vprint(1, f"converting thisfile with a one-liner: '{cmd}'")
         os.system(cmd)
 
 if __name__ == '__main__':

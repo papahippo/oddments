@@ -15,7 +15,9 @@ class Walker:
             return print(*pp, **kw)
 
     def handle_item(self, root_, item_, is_dir):
-        # sub-classes of Walker are not compelled to call this; but it can be convenient!
+        # Sub-classes of Walker are not compelled to call this; but it can be convenient!
+        # Sub-clases which intend to operate on directories as such - not just their files in them -
+        # should prvide their own ''handle_item.
         if is_dir:
             return None
         self.stem_, self.ext_ = os.path.splitext(item_)
@@ -24,9 +26,11 @@ class Walker:
         if self.prefix_ and self.stem_.startswith(self.prefix_):
             return False
         self.vprint(2, self.name_, 'isdir=%u' % is_dir, root_, item_)
-        self.composite_pathname = os.path.join(root_, item_)
-        self.shl_pathname = shlex.quote(self.composite_pathname)
-        #os.system("ls -l %s" % os.path.normpath(self.shl_pathname))
+        self.full_source_name = os.path.join(root_, item_)
+        self.shell_source_name = shlex.quote(self.full_source_name)
+        self.full_dest_name =  os.path.join(root_, self.prefix_ + item_)
+        self.shell_dest_name = shlex.quote(self.full_dest_name)
+        #os.system("ls -l %s" % os.path.normpath(self.shell_source_name))
         return True
 
     def walk(self, target):
@@ -76,9 +80,9 @@ class Walker:
             self.verbosity += 1
             return a
         # making recursion optional and not the default; work in progress!
-        if a in('-R', '--recurse'):
-            self.recurse = 1
-            return a
+        # if a in('-R', '--recurse'):
+        #    self.recurse = 1
+        #    return a
         if a in('-P', '--prefix'):
             self.prefix = self.next_arg
             return a

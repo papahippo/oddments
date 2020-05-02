@@ -26,7 +26,7 @@ class JpegsToPDF(Walker):
             return
         if not self.goes_to_same_PDF(item_):
             self.cleanup()
-        self.pendingJpegFileNames.append(f'{root_}/{item_}')
+        self.pendingJpegFileNames.append(self.full_source_name)
         return True
 
 

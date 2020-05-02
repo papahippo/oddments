@@ -38,7 +38,7 @@ class A5A5toA4L(Walker):
     def handle_item(self, root_, item_, is_dir):
         if not Walker.handle_item(self, root_, item_, is_dir):
             return
-        src = fitz.open(f'{root_}/{item_}')
+        src = fitz.open(self.full_source_name)
         dest = fitz.open()  # output initally empty!
         for spage in src:  # for each page in input
             xref = 0  # force initial page copy to output
@@ -67,7 +67,7 @@ class A5A5toA4L(Walker):
                                         reuse_xref=xref)  # copy input page once only
 
         # that's it, save output file
-        dest.save(os.path.join(root_, self.prefix_+item_),
+        dest.save(self.full_dest_name,
                  garbage=4,  # eliminate duplicate objects
                  deflate=True)  # compress stuff where possible
         return True

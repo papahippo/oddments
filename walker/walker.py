@@ -75,6 +75,9 @@ class Walker:
             real /= 100.0
         return real
 
+    def next_int_arg(self, default):
+        return int(self.next_arg(default))
+
     def process_keyword_arg(self, a):
         if a in ('-V', '--verbose'):
             self.verbosity += 1

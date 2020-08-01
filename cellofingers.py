@@ -9,7 +9,7 @@ import mido
 
 def program_pedals():
     # unbuffered reading of keyboard input in python is ... well not as straighforward as
-    # I had hoped. So, I program support my twin-pedal footswitch to generate (left) control-D = end-of-file
+    # I had hoped. So, I program my twin-pedal footswitch to generate (left) control-D = end-of-file
     # and (right) ENTER, both of which can be detected without too much jiggery-pokery.
     #
     return os.system("sudo footswitch -1 -m ctrl -k d -2 -k enter")

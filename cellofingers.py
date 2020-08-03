@@ -14,13 +14,12 @@ def program_pedals():
     #
     return os.system("sudo footswitch -1 -m ctrl -k d -2 -k enter")
 
-def right_pedal(timeout=None, obj=sys.stdin):
+def pedal(timeout=None, obj=sys.stdin):
     """
 Wait 'timeout' seconds (None => indefinitely) for action from footswitch.
 returns '' => left-pedal or '\n' => right pedal or None => timeout.
     """
-    inList, outsList, excList = select.select([obj], [], [], timeout)
-    inList, outsList, excList = select.select([obj], [], [], timeout)
+    print('pedal called!')
     inList, outsList, excList = select.select([obj], [], [], timeout)
     if inList:
         return inList[0].read(1)
@@ -49,15 +48,29 @@ def main():
         select_instrument_sound = mido.Message('program_change', program=instrument.midi_program, time=0)
         print(f"selecting MIDI program {instrument.midi_program}")
         port.send(select_instrument_sound)
-        while right_pedal(timeout=timeout) is not '':
+        prev_pitch = None
+        while 1:
             finger, pitch_offset = random.choice(fingers_and_their_pitch_offsets)
             pitch = string.GetPitch() + pitch_offset
             note = notes_by_Pitch[pitch][0]  # 0 => favour sharps over flats
-            print(f"({open_string_name} string)  finger: {finger}  {note}")
-            time.sleep(0.1)
-            port.send(mido.Message('note_on', note=pitch))
-            time.sleep(0.1)
-            port.send(mido.Message('note_off', note=pitch))
+            while 1:
+                if prev_pitch:
+                    port.send(mido.Message('note_on', note=prev_pitch))
+                    time.sleep(1.0)
+                    port.send(mido.Message('note_off', note=prev_pitch))
+                port.send(mido.Message('note_on', note=pitch))
+                time.sleep(1.0)
+                port.send(mido.Message('note_off', note=pitch))
+                if pedal(timeout=4.0) is '':
+                    continue
+                print(f"({open_string_name} string)  finger: {finger}  {note}",
+                  f"interval={pitch-prev_pitch if prev_pitch else ''}")
+                input_ = pedal(timeout=5.0)
+                if  input_ is not '':
+                    break
+            if input is None:
+                break
+            prev_pitch = pitch
     print("That's all folks!!")
 
 if __name__=="__main__":

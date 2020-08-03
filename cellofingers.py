@@ -3,7 +3,7 @@
 select left hand fingering for cello. Send corresponding note
 to output port... and ad hoc variations on that theme!
 """
-import sys, os, time, random, select
+import sys, os, time, random, signal
 from terpsichore import *
 import mido
 
@@ -12,18 +12,34 @@ def program_pedals():
     # I had hoped. So, I program my twin-pedal footswitch to generate (left) control-D = end-of-file
     # and (right) ENTER, both of which can be detected without too much jiggery-pokery.
     #
-    return os.system("sudo footswitch -1 -m ctrl -k d -2 -k enter")
+    return os.system("sudo footswitch -1 -k enter -2 -m ctrl -k c")
 
-def pedal(timeout=None, obj=sys.stdin):
+def pedal(prompt='', timeout=None, obj=sys.stdin):
     """
 Wait 'timeout' seconds (None => indefinitely) for action from footswitch.
 returns '' => left-pedal or '\n' => right pedal or None => timeout.
     """
-    print('pedal called!')
-    inList, outsList, excList = select.select([obj], [], [], timeout)
-    if inList:
-        return inList[0].read(1)
-    # return None # does this anyway!
+    if prompt:
+        print(prompt)
+    if timeout:
+        class TimeoutException(BaseException):
+            pass
+        def handler(signum, frame):
+            raise TimeoutException
+        signal.signal(signal.SIGALRM, handler)
+        signal.alarm(timeout)
+    try:
+        c = obj.read(1)
+        answer = True
+    except TimeoutException:
+        answer = None
+    except KeyboardInterrupt:
+        answer = False
+
+    if timeout:
+        signal.alarm(0)
+    print(f"pedal returns <{answer}>")
+    return answer
 
 def main():
     program_pedals()
@@ -61,15 +77,12 @@ def main():
                 port.send(mido.Message('note_on', note=pitch))
                 time.sleep(1.0)
                 port.send(mido.Message('note_off', note=pitch))
-                if pedal(timeout=4.0) is '':
+                if pedal(prompt="left=again, right or none = proceed", timeout=4):
                     continue
                 print(f"({open_string_name} string)  finger: {finger}  {note}",
                   f"interval={pitch-prev_pitch if prev_pitch else ''}")
-                input_ = pedal(timeout=5.0)
-                if  input_ is not '':
+                if not pedal(prompt="left=again, right or none = proceed", timeout=4):
                     break
-            if input is None:
-                break
             prev_pitch = pitch
     print("That's all folks!!")
 

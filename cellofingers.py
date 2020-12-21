@@ -14,6 +14,17 @@ def program_pedals():
     #
     return os.system("sudo footswitch -1 -k enter -2 -m ctrl -k c")
 
+
+class TimeoutException(BaseException):
+    pass
+
+
+def handler(signum, frame):
+    raise TimeoutException
+
+signal.signal(signal.SIGALRM, handler)
+
+
 def pedal(prompt='', timeout=None, obj=sys.stdin):
     """
 Wait 'timeout' seconds (None => indefinitely) for action from footswitch.
@@ -22,11 +33,6 @@ returns '' => left-pedal or '\n' => right pedal or None => timeout.
     if prompt:
         print(prompt)
     if timeout:
-        class TimeoutException(BaseException):
-            pass
-        def handler(signum, frame):
-            raise TimeoutException
-        signal.signal(signal.SIGALRM, handler)
         signal.alarm(timeout)
     try:
         c = obj.read(1)

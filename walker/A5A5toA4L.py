@@ -6,16 +6,21 @@ from walker import Walker
 class A5A5toA4L(Walker):
 
     name_ =  "2xA5 landscape (on 1 A4 page) to 2 A4 landscape pages converter"
-    tag_ = '-A4L'
-    lower_only = 0
-    upper_only = 0
+    prefix_ = 'A4L-'
+    myExts = ('.pdf',)
+    lower_only = False
+    upper_only = False
+    split = 0.5
 
     def process_keyword_arg(self, a):
         if a in ('-L', '--lower-only'):
-            self.lower_only += 1
+            self.lower_only = True
             return a
         if a in ('-U', '--upper-only'):
-            self.upper_only += 1
+            self.upper_only = True
+            return a
+        if a in ('-S', '--split'):
+            self.split = self.next_float_arg(0.5)
             return a
         if a in ('-h', '--help'):
             print("utility to convert 1 or 2 A5L images on a A4P page to separate A$ landscape images\n"
@@ -23,17 +28,17 @@ class A5A5toA4L(Walker):
                   "special options for A5A5toA4L are (shown quoted but must be entered unquoted!):\n"
                   "'--upper-only'   or equivalently '-U'\n"
                   "'--lower-only'   or equivalently '-L'\n"
+                  "'--split'   or equivalently '-S'\n"
+                  "means interpret the next argument as how far down the page to split the page.\n"
+                  "this may be entered as e.g. 0.6 or equivalently 60%. The default is 0.5 (50%).\n"
+                  "note that value other than 0.5 distort the vertical scaling of the output pages."
                   )
         return Walker.process_keyword_arg(self, a)
 
     def handle_item(self, root_, item_, is_dir):
-        print(root_, item_)
-        Walker.handle_item(self, root_, item_, is_dir)
-        stem_, ext_ = os.path.splitext(item_)
-        if is_dir or ext_.lower() not in ('.pdf',) or stem_.endswith(self.tag_):
-            return None
-        print(f'{root_}/{item_}')
-        src = fitz.open(f'{root_}/{item_}')
+        if not Walker.handle_item(self, root_, item_, is_dir):
+            return
+        src = fitz.open(self.full_source_name)
         dest = fitz.open()  # output initally empty!
         for spage in src:  # for each page in input
             xref = 0  # force initial page copy to output
@@ -43,15 +48,15 @@ class A5A5toA4L(Walker):
             # --------------------------------------------------------------------------
             # example: cut input page into 2 x 2 parts
             # --------------------------------------------------------------------------
-            rTop = r - (0, 0, 0, r.height * 0.5)
-            rBottom = r + (0, r.height * 0.5, 0, 0)
+            rTop = r - (0, 0, 0, r.height*(1-self.split))
+            rBottom = r + (0, r.height*self.split, 0, 0)
 
             for rx in [rect for rect, exclude in
                        ((rTop, self.lower_only), (rBottom, self.upper_only)) if not exclude]:
                 rx += d  # add the CropBox displacement
-                page = dest.newPage(-1,  # new output page with rx dimensions
-                                   width=r.height,  # r.width,
-                                   height=r.width)  # r.height)
+                page = dest.newPage(-1,  width=842, height=595) # = A4L
+                                   #  #width=r.height,  # r.width,
+                                   # height=r.width)  # r.height)
                 #        width = rx.width,
                 #        height = rx.height)
                 xref = page.showPDFpage(page.rect,  # fill all new page with the image
@@ -62,7 +67,7 @@ class A5A5toA4L(Walker):
                                         reuse_xref=xref)  # copy input page once only
 
         # that's it, save output file
-        dest.save(f"{stem_}{self.tag_}{ext_}",
+        dest.save(self.full_dest_name,
                  garbage=4,  # eliminate duplicate objects
                  deflate=True)  # compress stuff where possible
         return True

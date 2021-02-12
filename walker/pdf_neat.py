@@ -8,7 +8,9 @@ from walker import Walker
 class Pdf_neat(Walker):
 
     name_ =  "apply/adjust margins of PDF containing A4 scanned pages."
-    tag_ = '-neat'
+    myExts = ('.pdf',)
+    prefix_ = 'neat-'
+
     top_margin = 0
     left_margin = 0
     bottom_margin = 0
@@ -55,12 +57,9 @@ class Pdf_neat(Walker):
         return Walker.process_keyword_arg(self, a)
 
     def handle_item(self, root_, item_, is_dir):
-        print(root_, item_)
-        Walker.handle_item(self, root_, item_, is_dir)
-        stem_, ext_ = os.path.splitext(item_)
-        if is_dir or ext_.lower() not in ('.pdf',) or stem_.endswith(self.tag_):
-            return None
-        input = PdfFileReader(open('%s/%s' %(root_, item_), 'rb'))
+        if not Walker.handle_item(self, root_, item_, is_dir):
+            return
+        input = PdfFileReader(open(self.full_source_name, 'rb'))
         output = PdfFileWriter()
         for ic in range(self.copies):
             for p in [input.getPage(i) for i in range(0, input.getNumPages())]:
@@ -86,10 +85,9 @@ class Pdf_neat(Walker):
                     #q.mergeScaledTranslatedPage(p, )
                     q.mergeScaledPage(p, (0.8))
                     output.addPage(q)
-        output.write(open('%s/%s%s%s' %(root_, stem_, self.tag_, ext_,), 'wb'))
+        output.write(open(self.full_dest_name, 'wb'))
         return True
 
 
 if __name__ == '__main__':
     Pdf_neat().main()
-ghost

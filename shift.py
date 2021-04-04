@@ -23,6 +23,9 @@ class Morse:
         ('6', '-.....'), ('7', '--...'), ('8', '.---..'), ('9', '----.'), ('0', '-----'),
     ]
     secs_resolution = 0.03
+    dot_nax = 4
+    dash_max = 12
+    within_char_max = 12
 
     def init_dicts(self):
         self.morse_to_char = {}
@@ -43,19 +46,21 @@ class Morse:
             if self.poll()!=sense:
                 continue
             if i < ignore_first:
-                print ('<')
+                print ('<', end=" ")
                 continue
+            print(i if sense else -i, end=" ")
             return True
 
         else: # completed all iterations without returning!
             return False
 
     def get_dot_or_dash(self):
-        if not self.wait_for(True, 12):  # , ignore_first=1): # tune debounce later!
+        if not self.wait_for(True, self.within_char_max):  # , ignore_first=1): # tune debounce later!
             return None # => end of character
-        if self.wait_for(False, 3):
+        if self.wait_for(False, self.dot_nax):
             return '.'
-        if self.wait_for(False, 8):
+        if self.wait_for(False, self.dash_max - self.dot_nax):
+            print('+', end=" ")  # to distinguish in debug output
             return '-'
         raise Morse.Break('very long key press')
 
@@ -73,12 +78,15 @@ class Morse:
         while 1:
             s_dot_dash = self.get_s_dot_dash()
             if s_dot_dash != '':
-                print(f"s_dot_dash = {s_dot_dash}")
+                print(s_dot_dash, end=' ')
                 try:
                     return self.morse_to_char[s_dot_dash]
                 except KeyError:
                     raise Morse.Error(f"invalid morse code {s_dot_dash}")
 
+    def print_table(self):
+        for i, (char, morse) in enumerate(self.char_and_morse):
+            print(f"{char}={morse:6}", end='  ' if (i+1) % 4 else '\n')
 def main():
     morse = Morse()
     while 1:
@@ -91,6 +99,8 @@ def main():
             print(f"{mb}:\n ... treat this as regular doorbell push!")
         if my_char is not None:
             print(my_char)
+        if my_char == '?':
+            morse.print_table()
 
 if __name__=="__main__":
     main()

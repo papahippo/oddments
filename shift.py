@@ -6,18 +6,91 @@ to output port... and ad hoc variations on that theme!
 import sys, os, time, keyboard
 
 
-def main():
-    prev = False
-    count = 0
-    for i in range(500):
-        pressed = keyboard.is_pressed('shift')
-        if pressed == prev:
-            count +=1
+class Morse:
+    class Break(BaseException):
+        pass
+
+    class Error(BaseException):
+        pass
+
+    char_and_morse = [
+        ('A', '.-'), ('B', '-...'), ('C', '-.-.'), ('D', '-..'), ('E', '.'), ('F', '..-.'),
+        ('G', '--.'), ('H', '....'), ('I', '..'), ('J', '.---'),  ('K', '-.-'), ('L', '.-..'),
+        ('M', '--'), ('N', '-.'), ('O', '---'), ('P', '.--.'), ('Q', '--.-'), ('R', '.-.'),
+        ('S', '...'), ('T', '-'), ('U', '..-'), ('V', '...-'), ('W', '.--'), ('X', '-..-'),
+        ('Y', '-.--'), ('Z', '--..'), ('.', '.-.-.-'), (',', '--..--'), ('?', '..--..'),
+        ('1', '.----'), ('2', '..---'), ('3', '...--'), ('4', '....-'), ('5', '.....'),
+        ('6', '-.....'), ('7', '--...'), ('8', '.---..'), ('9', '----.'), ('0', '-----'),
+    ]
+    secs_resolution = 0.03
+
+    def init_dicts(self):
+        self.morse_to_char = {}
+        self.char_to_morse = {}
+        for (char, morse) in self.char_and_morse:
+            self.morse_to_char[morse] = char
+            self.char_to_morse[char] = morse
+
+    def __init__(self):
+        self.init_dicts()
+
+    def poll(self):
+        return keyboard.is_pressed('shift')
+
+    def wait_for(self, sense, how_long, ignore_first=0):
+        for i in range(how_long):
+            time.sleep(self.secs_resolution)
+            if self.poll()!=sense:
+                continue
+            if i < ignore_first:
+                print ('<')
+                continue
+            return True
+
+        else: # completed all iterations without returning!
+            return False
+
+    def get_dot_or_dash(self):
+        if not self.wait_for(True, 12):  # , ignore_first=1): # tune debounce later!
+            return None # => end of character
+        if self.wait_for(False, 3):
+            return '.'
+        if self.wait_for(False, 8):
+            return '-'
+        raise Morse.Break('very long key press')
+
+    def get_s_dot_dash(self):
+        s_dot_dash = ''
+        for i in range(8):  # more than max 'bits' per morse char
+            dot_or_dash = self.get_dot_or_dash()
+            if not dot_or_dash:
+                return s_dot_dash
+            s_dot_dash += dot_or_dash
         else:
-            if not pressed:
-                print (count, end=' ')
-            count = 0
-        prev = pressed
-        time.sleep(0.02)
+            raise Morse.Error(f"more than 8 bits!?")
+
+    def get_char(self):
+        while 1:
+            s_dot_dash = self.get_s_dot_dash()
+            if s_dot_dash != '':
+                print(f"s_dot_dash = {s_dot_dash}")
+                try:
+                    return self.morse_to_char[s_dot_dash]
+                except KeyError:
+                    raise Morse.Error(f"invalid morse code {s_dot_dash}")
+
+def main():
+    morse = Morse()
+    while 1:
+        my_char = None
+        try:
+            my_char = morse.get_char()
+        except Morse.Error as me:
+            print(f"morse code errr: {me}")
+        except Morse.Break as mb:
+            print(f"{mb}:\n ... treat this as regular doorbell push!")
+        if my_char is not None:
+            print(my_char)
+
 if __name__=="__main__":
     main()

@@ -23,9 +23,11 @@ class Morse:
         ('6', '-.....'), ('7', '--...'), ('8', '.---..'), ('9', '----.'), ('0', '-----'),
     ]
     secs_resolution = 0.03
+    ignore_first = 1
     dot_nax = 4
     dash_max = 12
     within_char_max = 12
+    key_to_poll = 'alt'  # 'shift'
 
     def init_dicts(self):
         self.morse_to_char = {}
@@ -38,14 +40,14 @@ class Morse:
         self.init_dicts()
 
     def poll(self):
-        return keyboard.is_pressed('shift')
+        return keyboard.is_pressed(self.key_to_poll)
 
-    def wait_for(self, sense, how_long, ignore_first=0):
+    def wait_for(self, sense, how_long):
         for i in range(how_long):
             time.sleep(self.secs_resolution)
             if self.poll()!=sense:
                 continue
-            if i < ignore_first:
+            if i < self.ignore_first:
                 print ('<', end=" ")
                 continue
             print(i if sense else -i, end=" ")
@@ -55,7 +57,7 @@ class Morse:
             return False
 
     def get_dot_or_dash(self):
-        if not self.wait_for(True, self.within_char_max):  # , ignore_first=1): # tune debounce later!
+        if not self.wait_for(True, self.within_char_max):
             return None # => end of character
         if self.wait_for(False, self.dot_nax):
             return '.'
@@ -77,16 +79,18 @@ class Morse:
     def get_char(self):
         while 1:
             s_dot_dash = self.get_s_dot_dash()
-            if s_dot_dash != '':
-                print(s_dot_dash, end=' ')
-                try:
-                    return self.morse_to_char[s_dot_dash]
-                except KeyError:
-                    raise Morse.Error(f"invalid morse code {s_dot_dash}")
+            if s_dot_dash == '':
+                continue
+            print(f"\n{s_dot_dash:>6}", end=' ')
+            try:
+                return self.morse_to_char[s_dot_dash]
+            except KeyError:
+                raise Morse.Error(f"invalid morse code {s_dot_dash}")
 
     def print_table(self):
         for i, (char, morse) in enumerate(self.char_and_morse):
-            print(f"{char}={morse:6}", end='  ' if (i+1) % 4 else '\n')
+            print(f"{char} = {morse:6}", end='  ' if (i+1) % 4 else '\n')
+        print()
 def main():
     morse = Morse()
     while 1:
@@ -98,7 +102,7 @@ def main():
         except Morse.Break as mb:
             print(f"{mb}:\n ... treat this as regular doorbell push!")
         if my_char is not None:
-            print(my_char)
+            print(f' = {my_char}')
         if my_char == '?':
             morse.print_table()
 

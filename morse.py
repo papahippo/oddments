@@ -1,16 +1,21 @@
 #!/usr/bin/python3
 """
-select left hand fingering for cello. Send corresponding note
-to output port... and ad hoc variations on that theme!
+morse code detection.
+This is ultimately intended for use with a button connected to an 'orange pi'
+(other fruits are available!) but this protoype works with the 'alt' key of a PC.
 """
 import sys, os, time, keyboard
 
 
 class Morse:
-    class Break(BaseException):
+    class Error(BaseException):
         pass
 
-    class Error(BaseException):
+    class Break(BaseException):
+        '''
+        treat a serously oversized pulse as a 'break condition' (analogous to the treatment of
+        successive zero bits past the stop bit on RS232 communication.
+        '''
         pass
 
     char_and_morse = [
@@ -27,7 +32,7 @@ class Morse:
     dot_nax = 4
     dash_max = 12
     within_char_max = 12
-    key_to_poll = 'alt'  # 'shift'
+    key_to_poll = 'alt'  # previously 'shift'
 
     def init_dicts(self):
         self.morse_to_char = {}

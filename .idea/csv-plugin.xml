@@ -10,6 +10,20 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="$USER_HOME$/kevin/gpio_morse.py">
+          <value>
+            <Attribute>
+              <option name="separator" value=":" />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/pias.py">
+          <value>
+            <Attribute>
+              <option name="separator" value=":" />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="/raadspel.py">
           <value>
             <Attribute>

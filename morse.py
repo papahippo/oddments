@@ -63,7 +63,7 @@ class Morse:
 
     def get_dot_or_dash(self):
         if not self.wait_for(True, self.within_char_max):
-            return None # => end of character
+            return None  # => end of character
         if self.wait_for(False, self.dot_nax):
             return '.'
         if self.wait_for(False, self.dash_max - self.dot_nax):
@@ -93,9 +93,10 @@ class Morse:
                 raise Morse.Error(f"invalid morse code {s_dot_dash}")
 
     def print_table(self):
-        for i, (char, morse) in enumerate(self.char_and_morse):
-            print(f"{char} = {morse:6}", end='  ' if (i+1) % 4 else '\n')
+        for i, (char, morse_code) in enumerate(self.char_and_morse):
+            print(f"{char} = {morse_code:6}", end='  ' if (i+1) % 4 else '\n')
         print()
+
 def main():
     morse = Morse()
     while 1:
@@ -111,5 +112,6 @@ def main():
         if my_char == '?':
             morse.print_table()
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     main()

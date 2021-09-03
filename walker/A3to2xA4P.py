@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import copy, sys, os
+import copy, os
 from PyPDF2 import PdfFileWriter, PdfFileReader
 
 from walker import Walker
@@ -7,15 +7,13 @@ from walker import Walker
 class A5A5toA4L(Walker):
 
     name_ =  "A3 landscape (on 1 A3 page) to 2 A4 portrait pages converter"
-    tag_ = '-A4L'
+    prefix_ = 'A4L-'
+    myExts = ('.pdf',)
 
     def handle_item(self, root_, item_, is_dir):
-        print(root_, item_)
-        Walker.handle_item(self, root_, item_, is_dir)
-        stem_, ext_ = os.path.splitext(item_)
-        if is_dir or ext_.lower() not in ('.pdf',) or stem_.endswith(self.tag_):
-            return None
-        input = PdfFileReader(open('%s/%s' %(root_, item_), 'rb'))
+        if not Walker.handle_item(self, root_, item_, is_dir):
+            return
+        input = PdfFileReader(open(self.full_source_name, 'rb'))
         output = PdfFileWriter()
         for p in [input.getPage(i) for i in range(0, input.getNumPages())]:
             q = copy.copy(p)
@@ -32,7 +30,7 @@ class A5A5toA4L(Walker):
             q.mediaBox.upperLeft = (x1/2, y1)
             q.mediaBox.upperRight = (x1, y1)
             output.addPage(q)
-        output.write(open('%s/%s%s%s' %(root_, stem_, self.tag_, ext_,), 'wb'))
+        output.write(open(self.full_dest_name, 'wb'))
         return True
 
 

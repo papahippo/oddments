@@ -7,7 +7,7 @@ Warnings:
      1. I added the sys.argc stuff just before posting on github without re-testing!
      2. The style does not conform to python commuity consensus of 'best practice'; e.g. %s stuff is old-fashioned.
      3. i used  '.bmp' file by accident (I was borrrowing my son's scanner because it supports letter format better).
-     4. I had the same problem with lettr stuff scanned as PDFs; the solution for this is ratehr different, but I
+     4. I had the same problem with lettr stuff scanned as PDFs; the solution for this is rather different, but I
         crammed it into this single source file!
 """
 

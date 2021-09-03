@@ -13,6 +13,8 @@ from walker import Walker
 class JamToA4(Walker):
 
     prefix_ = 'a4-'
+    myExts = ('.pdf',)
+
     sExtra = ''
 
     def process_keyword_arg(self, a):
@@ -43,17 +45,11 @@ class JamToA4(Walker):
 
 
     def handle_item(self, root_, item_, is_dir):
-        print(root_, item_)
-        Walker.handle_item(self, root_, item_, is_dir)
-        stem_, ext_ = os.path.splitext(item_)
-        if is_dir or ext_.lower() not in ('.pdf',) or stem_.startswith(self.prefix_):
-            return None
-        old_filename = os.path.join(root_, item_)
-        new_filename = os.path.join(root_, self.prefix_ + item_).replace('-.', '.')
+        if not Walker.handle_item(self, root_, item_, is_dir):
+            return
 
-        # cmd = f"pdfjam --outfile {new_filename}  --angle 180 --paper a4paper --scale {self.scale_} {old_filename}"
-        cmd = f"pdfjam --outfile {new_filename}  --paper a4paper {self.sExtra} {old_filename}"
-        print("converting this %s file with a one-liner: '%s'" %(ext_, cmd))
+        cmd = f"pdfjam --outfile {self.shell_dest_name}  --paper a4paper {self.sExtra} {self.shell_source_name}"
+        self.vprint(1, f"converting thisfile with a one-liner: '{cmd}'")
         os.system(cmd)
 
 if __name__ == '__main__':

@@ -79,22 +79,27 @@ class Walker:
         return int(self.next_arg(default))
 
     def process_keyword_arg(self, a):
-        if a in ('-V', '--verbose'):
+        if a in ('-v', '--verbose'):
             self.verbosity += 1
             return a
         # making recursion optional and not the default; work in progress!
         # if a in('-R', '--recurse'):
         #    self.recurse = 1
         #    return a
-        if a in('-P', '--prefix'):
+        if a in('-p', '--prefix'):
             self.prefix = self.next_arg
             return a
         # unrecognized args follow through to....
-        print("all utilities based around the 'Walker' class (also) accept the arguments (don't enter the quotes!):\n"
-                  "'--verbose'   or equivalently '-V'\n"
-                  "which may be repeated for even more verbosity (explanatory textual output)."
-                  )
-        if a in ('-H', '--help'):
+        print(
+                "\n"
+                "all utilities based around the 'Walker' class (also) accept the arguments (don't enter the quotes!):\n"
+                "'--help' or equivalently '-h'\n"
+                "\trequests help information about this command."
+                "\n"
+                "'--verbose' or equivalently '-v'\n"
+                "\trequests explanatory textual output; may be repeated wchic may casuse even more output."
+              )
+        if a in ('-h', '--help'):
             sys.exit(0)
         print("keyword '%s' not understood." % a)
         sys.exit(991)

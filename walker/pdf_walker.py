@@ -36,12 +36,19 @@ class PdfWalker(Walker):
         if a in ('-h', '--help'):
             print("utility to check images within a PDF and optionally 'fix' them.\n"
                  "syntax:  pdf_walker.py [options] [paths]\n"
+                  "\n"
                   "special options for pdf_walker.py are: (shown quoted but must be entered unquoted!)\n"
+                  "\n"
+                  "'--fix'   or equivalently '-f'\n"
+                  "\tmeans don't just inspect but also fix the PDFs whre necessary.\n"
+                  "\n"
                   "'--threshold'   or equivalently '-t'\n"
-                  "means interpret the next argument as the black threshold for conversion to mono ('lineart')\n"
-                  "this may be entered as e.g. 0.6 or equivalently 60%. The default is 0.5 (50%)\n"
+                  "\tmeans interpret the next argument as the black threshold for conversion to mono ('lineart')\n"
+                  "\tthis may be entered as e.g. 0.6 or equivalently 60%. The default is 0.5 (50%)\n"
+                  "\n"
                   "'--resolution'   or equivalently '-r'\n"
-                  "means interpret the next argument as the resolution to use. The default is 300.\n"
+                  "\n"
+                  "\tmeans interpret the next argument as the resolution to use. The default is 300.\n"
                   )
         return Walker.process_keyword_arg(self, a)
 

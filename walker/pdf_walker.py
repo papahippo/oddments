@@ -16,7 +16,7 @@ class PdfWalker(Walker):
     tmp_pdf_filename = '/tmp/pdf_fix.pdf'
     fix = 0
     resolution = 300
-    threshold = 0.5
+    threshold = 0.85
 
     def process_keyword_arg(self, a):
         if a in ('-f', '--fix'):
@@ -93,7 +93,7 @@ class PdfWalker(Walker):
                 call("ps2pdf %s %s" % (self.ps_filename, self.shell_source_name), shell=True)
                 return True
             if field['color']!='gray' or int(field['bpc'])!=1:
-                self.vprint(1, "%s is %u bit(s) %s (not 1 bit gray)" % (self.shell_source_name, int(field['bpc']), field['color']))
+                self.vprint(0, "%s is %u bit(s) %s (not 1 bit gray)" % (self.shell_source_name, int(field['bpc']), field['color']))
                 if not self.fix:
                     continue
                 # So we want to convert a PDF's image from e.g RGB or 8-bit grey to one-bit grey (=bivalue=B/W=lineart).

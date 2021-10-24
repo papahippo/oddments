@@ -54,12 +54,12 @@ class A5A5toA4L(Walker):
             for rx in [rect for rect, exclude in
                        ((rTop, self.lower_only), (rBottom, self.upper_only)) if not exclude]:
                 rx += d  # add the CropBox displacement
-                page = dest.newPage(-1,  width=842, height=595) # = A4L
+                page = dest.new_page(-1,  width=842, height=595) # = A4L
                                    #  #width=r.height,  # r.width,
                                    # height=r.width)  # r.height)
                 #        width = rx.width,
                 #        height = rx.height)
-                xref = page.showPDFpage(page.rect,  # fill all new page with the image
+                xref = page.show_pdf_page(page.rect,  # fill all new page with the image
                                         src,  # input document
                                         spage.number,  # input page number
                                         clip=rx,  # which part to use of input page

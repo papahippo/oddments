@@ -82,6 +82,9 @@ class Walker:
         if a in ('-v', '--verbose'):
             self.verbosity += 1
             return a
+        if a in ('-q', '--quiet'):
+            self.verbosity += 1
+            return a
         # making recursion optional and not the default; work in progress!
         # if a in('-R', '--recurse'):
         #    self.recurse = 1
@@ -97,7 +100,7 @@ class Walker:
                 "\trequests help information about this command."
                 "\n"
                 "'--verbose' or equivalently '-v'\n"
-                "\trequests explanatory textual output; may be repeated wchic may casuse even more output."
+                "\trequests quiet operation, i.e. less textual output;"
               )
         if a in ('-h', '--help'):
             sys.exit(0)

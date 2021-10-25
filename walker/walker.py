@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 """ dive into archive and perform maintenance or analysis or report tasks on all files"""
-import sys, os, shlex
+import sys, os, shlex, glob
 
 
 class Walker:
@@ -83,7 +83,7 @@ class Walker:
             self.verbosity += 1
             return a
         if a in ('-q', '--quiet'):
-            self.verbosity += 1
+            self.verbosity -= 1
             return a
         # making recursion optional and not the default; work in progress!
         # if a in('-R', '--recurse'):
@@ -100,6 +100,9 @@ class Walker:
                 "\trequests help information about this command."
                 "\n"
                 "'--verbose' or equivalently '-v'\n"
+                "\trequests verbose operation, i.e. more textual output; repeat this argument for even more!"
+                "\n"
+                "'--quiet' or equivalently '-q'\n"
                 "\trequests quiet operation, i.e. less textual output;"
               )
         if a in ('-h', '--help'):
@@ -111,13 +114,15 @@ class Walker:
         a = self.next_keyword_arg()
         if a is not None:
             return self.process_keyword_arg(a)
+
     def main(self):
         #print (os.getcwd())
         prog_path = sys.argv.pop(0)
         while self.process_next_keyword_arg():
             pass
-        targets = sys.argv or ['.']
-        self.vprint(1, "running '%s' on '%s'" %(prog_path, ' '.join(sys.argv)))
+        targets = (sum(map(glob.glob, sys.argv), []) if sys.argv
+                   else ['.'])
+        self.vprint(1, "running '%s' on... '%s'" %(prog_path, ', '.join(targets)))
         for target in targets:
             self.walk(target)
 

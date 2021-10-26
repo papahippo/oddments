@@ -26,6 +26,8 @@ class Walker:
             return False
         if self.prefix_ and self.stem_.startswith(self.prefix_):
             return False
+        if os.path.isabs(item_):
+            root_ = ''
         self.vprint(2, self.name_, 'isdir=%u' % is_dir, root_, item_)
         self.full_source_name = os.path.join(root_, item_)
         self.vprint(2, f'full_source_name = {self.full_source_name}')

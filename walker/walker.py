@@ -94,7 +94,7 @@ class Walker:
         #    self.recurse = 1
         #    return a
         if a in('-p', '--prefix'):
-            self.prefix = self.next_arg
+            self.prefix_ = self.next_arg()
             return a
         # unrecognized args follow through to....
         print(

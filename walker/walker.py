@@ -28,9 +28,12 @@ class Walker:
             return False
         self.vprint(2, self.name_, 'isdir=%u' % is_dir, root_, item_)
         self.full_source_name = os.path.join(root_, item_)
+        self.vprint(2, f'full_source_name = {self.full_source_name}')
         self.shell_source_name = shlex.quote(self.full_source_name)
         self.full_dest_name =  os.path.join(parentage, root_, self.prefix_ + child)
+        self.vprint(2, f'full_dest_name = {self.full_dest_name}')
         self.shell_dest_name = shlex.quote(self.full_dest_name)
+        self.vprint(2, f'shell_dest_name = {self.shell_dest_name}')
         #os.system("ls -l %s" % os.path.normpath(self.shell_source_name))
         return True
 

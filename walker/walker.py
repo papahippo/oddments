@@ -20,7 +20,8 @@ class Walker:
         # should prvide their own ''handle_item.
         if is_dir:
             return None
-        self.stem_, self.ext_ = os.path.splitext(item_)
+        parentage, child = os.path.split(item_)
+        self.stem_, self.ext_ = os.path.splitext(child)
         if self.myExts and self.ext_.lower() not in self.myExts:
             return False
         if self.prefix_ and self.stem_.startswith(self.prefix_):
@@ -28,7 +29,7 @@ class Walker:
         self.vprint(2, self.name_, 'isdir=%u' % is_dir, root_, item_)
         self.full_source_name = os.path.join(root_, item_)
         self.shell_source_name = shlex.quote(self.full_source_name)
-        self.full_dest_name =  os.path.join(root_, self.prefix_ + item_)
+        self.full_dest_name =  os.path.join(parentage, root_, self.prefix_ + child)
         self.shell_dest_name = shlex.quote(self.full_dest_name)
         #os.system("ls -l %s" % os.path.normpath(self.shell_source_name))
         return True

@@ -77,7 +77,7 @@ class Walker:
         real = float(sReal)
         if rest:
             if len(*rest):
-                raise ValueError("invalid real/percentrage value")
+                raise ValueError("invalid real/percentage value")
             real /= 100.0
         return real
 

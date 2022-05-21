@@ -1,11 +1,11 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 """ dive into music archive and perform maintenance or analysis or repair tasks on all PDFs
-N.B. There is considerable overlap in functionality between this scriprt and oddments/pdf_compact.py
+N.B. There is considerable overlap in functionality between this script and oddments/pdf_compact.py
 ... but I am wary of burning bridges just yet!"""
 
 import sys, os, re
-from subprocess import Popen, PIPE, TimeoutExpired, call
+import subprocess
 
 from walker import Walker
 
@@ -15,7 +15,7 @@ class PdfWalker(Walker):
     ps_filename = '/tmp/pdf_fix.ps'
     tmp_pdf_filename = '/tmp/pdf_fix.pdf'
     fix = 0
-    resolution = 300
+    resolution = 600
     threshold = 0.85
 
     def process_keyword_arg(self, a):
@@ -53,17 +53,9 @@ class PdfWalker(Walker):
         return Walker.process_keyword_arg(self, a)
 
     def check_images(self, effort):
-        proc = Popen("pdfimages -list %s" % self.shell_source_name, stdout=PIPE, stderr=PIPE, shell=True, close_fds=True)
-        try:
-            outs, errs = proc.communicate(timeout=15)
-        except TimeoutExpired:
-            proc.kill()
-            outs, errs = proc.communicate()
-        out_lines = outs.decode(sys.stdout.encoding).split('\n')
-        err_lines = errs.decode(sys.stderr.encoding).split('\n')
-        if 0: #  or err_lines:  # disabled, not sure why!?
-            print("(buggy old?) pdfimages gave errors on %s" % self.shl_pathname)
-            return None
+        proc = subprocess.run(('pdfimages', '-list', self.full_source_name), capture_output=True, timeout=5)
+        out_lines = proc.stdout.decode(sys.stdout.encoding).split('\n')
+        err_lines = proc.stderr.decode(sys.stderr.encoding).split('\n')
         if len(out_lines)<2:
             self.vprint(1, "not a proper PDF? %s" % self.shell_source_name)
             return None  # => no images
@@ -89,8 +81,8 @@ class PdfWalker(Walker):
                 # whose logic used to assume that in-line images are always very small (?not 100% sure of this story).
                 # anyway, they are easily corrected:
                 #
-                call("pdf2ps %s %s" % (self.shell_source_name, self.ps_filename), shell=True)
-                call("ps2pdf %s %s" % (self.ps_filename, self.shell_source_name), shell=True)
+                subprocess.run(('pdf2ps', self.full_source_name, self.ps_filename))
+                subprocess.run(('ps2pdfs', self.ps_filename, self.full_source_name))
                 return True
             if field['color']!='gray' or int(field['bpc'])!=1:
                 self.vprint(0, "%s is %u bit(s) %s (not 1 bit gray)" % (self.shell_source_name, int(field['bpc']), field['color']))
@@ -102,22 +94,28 @@ class PdfWalker(Walker):
                 # N.B. This is unnecessarily complicated. 'gs' can convert a multi-page PDF in one go.
                 # See 'oddments/pdf_compact.py'.
                 if not fixed_tifs:
-                    repair_cmd = ('gs -q -dNOPAUSE -dBATCH -dUseCropBox -sOutputFile=temp_%d.tif' +
-                           f' -r{self.resolution} -sDEVICE=tiffg4'
-                        +  f' -c "{{ {self.threshold:.2f} gt {{ 1 }} {{ 0 }} ifelse}} settransfer" -f '
-                        +  self.shell_source_name)
-                    self.vprint (1, "repair_cmd=", repair_cmd)
-                    call(repair_cmd, shell=True)
+                    repair_args = ('gs', '-q', '-dNOPAUSE',  '-dBATCH', '-dUseCropBox', '-sOutputFile=temp_%d.tif',
+                           f'-r{self.resolution}', '-sDEVICE=tiffg4',
+                           '-c', f"{{ {self.threshold:.2f} gt {{ 1 }} {{ 0 }} ifelse}} settransfer", '-f',
+                           self.full_source_name)
+                    self.vprint (1, "repair_args=", repair_args)
+                    subprocess.run(repair_args)
                 fixed_tifs.append('temp_%d.tif' % (1+len(fixed_tifs)))
                 continue
-                #call("convert %s -monochrome -threshold 50 %s" % (self.shell_source_name, self.tmp_pdf_filename), shell=True)
-                # unfinished!
-                #call("cp %s %s"  % (self.tmp_shl_pathname, self.shell_source_name), shell=True)
             self.vprint(2, "good image encountered")
         if fixed_tifs:
-            reunite_cmd = 'convert ' + ' '.join(fixed_tifs)+ ' ' + self.shell_source_name
-            self.vprint(1, "reunite_cmd=", reunite_cmd)
-            call(reunite_cmd, shell=True)
+            if 0:  # too slow and memory consuming
+                reunite_args = ['convert',] + fixed_tifs + [self.full_source_name,]
+                self.vprint(1, "reunite_args=", reunite_args)
+                subprocess.run(reunite_args)
+            else:
+                combine_args = ['tiffcp',] + fixed_tifs + ['combibed.tif',]
+                self.vprint(1, "combine_args=", combine_args)
+                subprocess.run(combine_args)
+
+                convert_args = ['tiff2pdf', '-o', self.full_source_name,'combibed.tif', ]
+                self.vprint(1, "reunite_args=", convert_args)
+                subprocess.run(convert_args)
             return True
         return False
 

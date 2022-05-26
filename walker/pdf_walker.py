@@ -44,7 +44,7 @@ class PdfWalker(Walker):
                   "\n"
                   "'--threshold'   or equivalently '-t'\n"
                   "\tmeans interpret the next argument as the black threshold for conversion to mono ('lineart')\n"
-                  "\tthis may be entered as e.g. 0.6 or equivalently 60%. The default is 0.5 (50%)\n"
+                  f"\tthis may be entered as e.g. 0.6 or equivalently 60%. The default is {self.threshold} ({int(self.threshold*100)}%)\n"
                   "\n"
                   "'--resolution'   or equivalently '-r'\n"
                   "\n"

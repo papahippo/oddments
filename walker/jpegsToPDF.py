@@ -22,7 +22,7 @@ class JpegsToPDF(Walker):
             self.pendingJpegFileNames = []
 
     def handle_item(self, root_, item_, is_dir):
-        if not Walker.handle_item(self, root_, item_, is_dir):
+        if is_dir or not Walker.handle_item(self, root_, item_, is_dir):
             return
         if not self.goes_to_same_PDF(item_):
             self.cleanup()

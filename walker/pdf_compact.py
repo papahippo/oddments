@@ -29,7 +29,7 @@ class Pdf_compact(Walker):
         return Walker.process_keyword_arg(self, a)
 
     def handle_item(self, root_, item_, is_dir):
-        if not Walker.handle_item(self, root_, item_, is_dir):
+        if is_dir or not Walker.handle_item(self, root_, item_, is_dir):
             return
         input = PdfFileReader(open(self.full_source_name, 'rb'), strict=False)
         output = PdfFileWriter()

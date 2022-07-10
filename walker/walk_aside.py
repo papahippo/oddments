@@ -16,7 +16,7 @@ class WalkAside(Walker):
 
     def handle_item(self, root_, item_name, is_dir):
 
-        if not Walker.handle_item(self, root_, item_name, is_dir):
+        if is_dir or not Walker.handle_item(self, root_, item_name, is_dir):
             return None
         if item_name not in ('musicParts.py',):
             return False

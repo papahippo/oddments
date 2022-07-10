@@ -10,7 +10,8 @@ class SLinkWalker(Walker):
     name_ =  "symbolic walker/fixer"
 
     def handle_item(self, root_, item_name, is_dir):
-        Walker.handle_item(self, root_, item_name, is_dir)
+        if not Walker.handle_item(self, root_, item_name, is_dir):
+            return
         if not os.path.islink(self.full_source_name):
             return
         source = os.readlink(self.full_source_name)

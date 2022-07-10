@@ -45,7 +45,7 @@ class JamToA4(Walker):
 
 
     def handle_item(self, root_, item_, is_dir):
-        if not Walker.handle_item(self, root_, item_, is_dir):
+        if is_dir or not Walker.handle_item(self, root_, item_, is_dir):
             return
 
         cmd = f"pdfjam --outfile {self.shell_dest_name}  --paper a4paper {self.sExtra} {self.shell_source_name}"

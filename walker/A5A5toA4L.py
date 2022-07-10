@@ -36,7 +36,7 @@ class A5A5toA4L(Walker):
         return Walker.process_keyword_arg(self, a)
 
     def handle_item(self, root_, item_, is_dir):
-        if not Walker.handle_item(self, root_, item_, is_dir):
+        if is_dir or not Walker.handle_item(self, root_, item_, is_dir):
             return
         src = fitz.open(self.full_source_name)
         dest = fitz.open()  # output initally empty!

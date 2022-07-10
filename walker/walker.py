@@ -18,8 +18,8 @@ class Walker:
         # Sub-classes of Walker are not compelled to call this; but it can be convenient!
         # Sub-clases which intend to operate on directories as such - not just their files in them -
         # should prvide their own ''handle_item.
-        if is_dir:
-            return None
+        # if is_dir:
+        #     return None
         parentage, child = os.path.split(item_)
         self.stem_, self.ext_ = os.path.splitext(child)
         if self.myExts and self.ext_.lower() not in self.myExts:

@@ -12,7 +12,7 @@ class Topsy(Walker):
     myExts = ('.pdf',)
 
     def handle_item(self, root_, item_, is_dir):
-        if not Walker.handle_item(self, root_, item_, is_dir):
+        if is_dir or not Walker.handle_item(self, root_, item_, is_dir):
             return
         call(f"pdftk {self.shell_source_name} cat 1-enddown output {self.shell_dest_name}", shell=True)
         return True

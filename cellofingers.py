@@ -54,7 +54,11 @@ def main():
     program_name = sys.argv and sys.argv.pop(0) or "unknown program"
     timeout = sys.argv and float(sys.argv.pop(0)) or None #    # 1.5  # seconds
     open_string_name = sys.argv and sys.argv.pop(0) or 'D'
-    port_name = sys.argv and sys.argv.pop(0) or 'TiMidity port 0'
+    port_name = sys.argv and sys.argv.pop(0) or -1  # don't rely on MIDO_DEFAULT_OUTPUT set to e.g. 'Synth input port (1837:0)' or 'TiMidity port 0'
+    try:
+        port_name = mido.get_output_names()[int(port_name)]
+    except ValueError:
+        pass
     print(f"running '{program_name}' assuming fingers on '{open_string_name}' string;using MIDI port '{port_name}'")
 
     for string in instrument.strings:

@@ -1,0 +1,91 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+""" Large = 'Little argument engine' - a utility class."""
+import sys, os, shlex, glob
+
+class Large:
+    # N.B. This code started life as part of 'walker.py'.
+
+    name_ = "dummy walker"
+    verbosity = 0
+    prefix_ = ''   # maybe None better but this lazier
+    myExts = ()
+
+    def vprint(self, this_verbosity, *pp, **kw):
+        if self.verbosity >= this_verbosity:
+            return print(*pp, **kw)
+
+    def process_args(self):
+        self.program_name = sys.argv.pop(0)
+        while self.process_next_keyword_arg():
+            pass
+
+    def next_arg(self, default=None):
+        if not sys.argv:
+            return default
+        arg = sys.argv.pop(0)
+        if arg == '--':
+            return default
+        return arg
+
+    def next_keyword_arg(self):
+        arg = self.next_arg()
+        if not arg:
+            return
+        if arg[0]=='-':
+            return arg
+        sys.argv.insert(0, arg)
+
+    def next_float_arg(self, default):
+        v = self.next_arg(default)
+        sReal, *rest = str(v).split('%')
+        real = float(sReal)
+        if rest:
+            if len(*rest):
+                raise ValueError("invalid real/percentage value")
+            real /= 100.0
+        return real
+
+    def next_int_arg(self, default):
+        return int(self.next_arg(default))
+
+    def process_keyword_arg(self, a):
+        if a in ('-v', '--verbose'):
+            self.verbosity += 1
+            return a
+        if a in ('-q', '--quiet'):
+            self.verbosity -= 1
+            return a
+
+        # unrecognized args follow through to....
+        print(
+                "\n"
+                "all utilities based around the 'Walker' class (also) accept the arguments (don't enter the quotes!):\n"
+                "'--help' or equivalently '-h'\n"
+                "\trequests help information about this command."
+                "\n"
+                "'--verbose' or equivalently '-v'\n"
+                "\trequests verbose operation, i.e. more textual output; repeat this argument for even more!"
+                "\n"
+                "'--quiet' or equivalently '-q'\n"
+                "\trequests quiet operation, i.e. less textual output;"
+              )
+        if a in ('-h', '--help'):
+            sys.exit(0)
+        print("keyword '%s' not understood." % a)
+        sys.exit(991)
+
+    def process_next_keyword_arg(self):
+        a = self.next_keyword_arg()
+        if a is not None:
+            return self.process_keyword_arg(a)
+
+    def main(self):
+        #print (os.getcwd())
+        prog_path = sys.argv.pop(0)
+        while self.process_next_keyword_arg():
+            pass
+
+
+if __name__ == '__main__':
+    Large().main()  # our class is both a base class and a dummy class

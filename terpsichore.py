@@ -10,6 +10,10 @@ print A3, B4
 """
 import numpy, math
 
+
+class MusicNoteError(BaseException):
+    pass
+
 all_Keys = {}
 note_letters = ('C', None, 'D', None, 'E', 'F', None, 'G', None, 'A', None, 'B')
 
@@ -230,6 +234,13 @@ class _Instrument(musicItem):
         s = self.strings and "(%s strings)" % len(self.strings) or ""
         return "instrument:'%s'%s" % (self.real_name, s)
 
+    def get_string_note_from_letter(self, letter):
+        ok_letters =''.join([sg.real_name[0] for sg in self.strings])
+        print (ok_letters.find(letter.upper()))
+        try:
+            return self.strings[(ok_letters.find if letter.isupper() else ok_letters.rfind)(letter.upper())]
+        except ValueError:
+            raise MusicNoteError(f"A {self} with a '{letter}' string?  I don't think so!")
 
 class Instrument(musicGroup):
     pass

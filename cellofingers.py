@@ -6,6 +6,8 @@ to output port... and ad hoc variations on that theme!
 import sys, os, time, random, signal
 from terpsichore import *
 import mido
+from large import Large
+
 
 def program_pedals():
     # unbuffered reading of keyboard input in python is ... well not as straighforward as
@@ -47,54 +49,83 @@ returns '' => left-pedal or '\n' => right pedal or None => timeout.
     print(f"pedal returns <{answer}>")
     return answer
 
-def main():
-    program_pedals()
-    instrument = Instrument.Cello
-    program_number = 43
-    program_name = sys.argv and sys.argv.pop(0) or "unknown program"
-    timeout = sys.argv and float(sys.argv.pop(0)) or None #    # 1.5  # seconds
-    open_string_name = sys.argv and sys.argv.pop(0) or 'D'
-    port_name = sys.argv and sys.argv.pop(0) or -1  # don't rely on MIDO_DEFAULT_OUTPUT set to e.g. 'Synth input port (1837:0)' or 'TiMidity port 0'
-    try:
-        port_name = mido.get_output_names()[int(port_name)]
-    except ValueError:
-        pass
-    print(f"running '{program_name}' assuming fingers on '{open_string_name}' string;using MIDI port '{port_name}'")
+class CelloFingers(Large):
+    open_strings = 'D'
+    user_secs = 3.0
+    midi_port = -1
 
-    for string in instrument.strings:
-        if string.real_name.startswith(open_string_name):
-            break
-    else:
-        print(f"A {instrument} with a '{open_string_name}' string?  I don't think so!")
-        sys.exit(990)
+    def process_keyword_arg(self, a):
+        if a in ('-S', '--open-string'):
+            self.open_strings = sys.argv.pop(0)
+            return a
+        if a in ('-U', '--user-time'):
+            self.user_secs = self.next_float_arg()
+            return a
+        if a in ('-P', '--midi-port'):
+            self.midi_port= self.next_arg()  # more processing of this later!
+            return a
+        if a in ('-h', '--help'):
+            print("utility to reduce letter-size PDF's to A4 size.\n"
+                 "syntax:  pdf_walker.py [options] [paths]\n"
+                  "special options for pdf_walker.py are: (shown quoted but must be entered unquoted!)\n"
+                  "'--prefix'   or equivalently '-p'\n"
+                  "  means interpret the next argument as the prefix to apply when deriving thte output filename.\n"
+                  "'--rotate'   or equivalently '-r'\n"
+                  "  means interpret the next argument as an angle to rotate in degrees (e.g. 180 for upside-down).\n"
+                  "'--prefix'   or equivalently '-p'\n"
+                  "  means interpret the next argument as the prefix to apply when deriving thte output filename.\n"
+                  "'--scale'   or equivalently '-s'\n"
+                  "  means interpret the next argument as the scaling to apply (in order to get nice but not too wide border).\n"
+                  "this may be entered as e.g. 0.8 or equivalently 80%. The default is to apply no scaling\n"
+                  )
+        return Large.process_keyword_arg(self, a)
 
-    fingers_and_their_pitch_offsets = list(enumerate([0, 2, 3, 4, 5]))  # beginners only!
+    def process_args(self):
+        Large.process_args(self)
+        print(f"remaining args: {sys.argv}")
 
-    with mido.open_output(port_name, autoreset=True) as port:
-        select_instrument_sound = mido.Message('program_change', program=instrument.midi_program, time=0)
-        print(f"selecting MIDI program {instrument.midi_program}")
-        port.send(select_instrument_sound)
-        prev_pitch = None
-        while 1:
-            finger, pitch_offset = random.choice(fingers_and_their_pitch_offsets)
-            pitch = string.GetPitch() + pitch_offset
-            note = notes_by_Pitch[pitch][0]  # 0 => favour sharps over flats
+    def main(self):
+        self.process_args()
+        #sys.exit(0)
+        program_pedals()
+
+        instrument = Instrument.Cello
+        try:
+            self.midi_port = mido.get_output_names()[int(self.midi_port)]
+        except ValueError:
+            pass
+        print(f"running '{self.program_name}' assuming fingers on '{self.open_strings}' string;using MIDI port '{self.midi_port}'")
+
+        self.string_notes = [instrument.get_string_note_from_letter(letter) for letter in self.open_strings]
+
+        fingers_and_their_pitch_offsets = list(enumerate([0, 2, 3, 4, 5]))  # beginners only!
+
+        with mido.open_output(self.midi_port, autoreset=True) as port:
+            select_instrument_sound = mido.Message('program_change', program=instrument.midi_program, time=0)
+            print(f"selecting MIDI program {instrument.midi_program}")
+            port.send(select_instrument_sound)
+            prev_pitch = None
             while 1:
-                if prev_pitch:
-                    port.send(mido.Message('note_on', note=prev_pitch))
+                finger, pitch_offset = random.choice(fingers_and_their_pitch_offsets)
+                the_string = random.choice(self.string_notes)
+                pitch = the_string.GetPitch() + pitch_offset
+                note = notes_by_Pitch[pitch][0]  # 0 => favour sharps over flats
+                while 1:
+                    if prev_pitch:
+                        port.send(mido.Message('note_on', note=prev_pitch))
+                        time.sleep(1.0)
+                        port.send(mido.Message('note_off', note=prev_pitch))
+                    port.send(mido.Message('note_on', note=pitch))
                     time.sleep(1.0)
-                    port.send(mido.Message('note_off', note=prev_pitch))
-                port.send(mido.Message('note_on', note=pitch))
-                time.sleep(1.0)
-                port.send(mido.Message('note_off', note=pitch))
-                if pedal(prompt="left=again, right or none = proceed", timeout=4):
-                    continue
-                print(f"({open_string_name} string)  finger: {finger}  {note}",
-                  f"interval={pitch-prev_pitch if prev_pitch else ''}")
-                if not pedal(prompt="left=again, right or none = proceed", timeout=4):
-                    break
-            prev_pitch = pitch
-    print("That's all folks!!")
+                    port.send(mido.Message('note_off', note=pitch))
+                    if pedal(prompt="left=again, right or none = proceed", timeout=4):
+                        continue
+                    print(f"string {the_string.real_name}, finger: {finger}  {note}",
+                      f"interval={pitch-prev_pitch if prev_pitch else ''}")
+                    if not pedal(prompt="left=again, right or none = proceed", timeout=4):
+                        break
+                prev_pitch = pitch
+        print("That's all folks!!")
 
 if __name__=="__main__":
-    main()
+    CelloFingers().main()

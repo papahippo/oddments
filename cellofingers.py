@@ -85,8 +85,8 @@ class CelloFingers(Large):
         print(f"remaining args: {sys.argv}")
 
     def main(self):
-        self.process_args()
-        #sys.exit(0)
+        self.process_all_keyword_args()
+        self.no_more_positional_args()
         program_pedals()
 
         instrument = Instrument.Cello

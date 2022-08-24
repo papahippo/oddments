@@ -15,7 +15,7 @@ class Large:
         if self.verbosity >= this_verbosity:
             return print(*pp, **kw)
 
-    def process_args(self):
+    def process_all_keyword_args(self):
         self.program_name = sys.argv.pop(0)
         while self.process_next_keyword_arg():
             pass
@@ -86,12 +86,14 @@ class Large:
         if a is not None:
             return self.process_keyword_arg(a)
 
+    def no_more_positional_args(self):
+        if sys.argv:
+            raise ValueError(f"extraneous argument(s) '{sys.argv}' passed to '{self.program_name}'.")
+
     def main(self):
         #print (os.getcwd())
-        prog_path = sys.argv.pop(0)
-        while self.process_next_keyword_arg():
-            pass
-
+        self.process_all_keyword_args()
+        self.no_more_positional_args()
 
 if __name__ == '__main__':
     Large().main()  # our class is both a base class and a dummy class

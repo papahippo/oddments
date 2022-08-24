@@ -33,21 +33,27 @@ class Large:
         if not arg:
             return
         if arg[0]=='-':
+            self.latest_kw_arg = arg
             return arg
         sys.argv.insert(0, arg)
 
-    def next_float_arg(self, default):
-        v = self.next_arg(default)
+    def next_float_arg(self, default=None):
+        v= self.next_arg(default)
+        if v is None:
+            raise ValueError(f"missing float/percentage value after keyword '{self.latest_kw_arg}'")
         sReal, *rest = str(v).split('%')
         real = float(sReal)
         if rest:
-            if len(*rest):
+            if rest:
                 raise ValueError("invalid real/percentage value")
             real /= 100.0
         return real
 
     def next_int_arg(self, default):
-        return int(self.next_arg(default))
+        v = self.next_arg(default)
+        if v is None:
+            raise ValueError(f"missing integer value after keyword '{self.latest_kw_arg}'")
+        return int(v)
 
     def process_keyword_arg(self, a):
         if a in ('-v', '--verbose'):

@@ -3,7 +3,7 @@
 """ Large = 'Little argument engine' - a utility class."""
 import sys, os, shlex, glob
 
-class Large:
+class ArgHandler:
     # N.B. This code started life as part of 'walker.py'.
 
     name_ = "dummy walker"
@@ -96,4 +96,4 @@ class Large:
         self.no_more_positional_args()
 
 if __name__ == '__main__':
-    Large().main()  # our class is both a base class and a dummy class
+    ArgHandler().main()  # our class is both a base class and a dummy class

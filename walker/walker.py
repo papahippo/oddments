@@ -5,7 +5,7 @@ import sys, os, shlex, glob
 
 class Walker:
     # N.B. The argument parsing and similar stuff from this class has been used as a basis for class 'Large';
-    # see 'large.py'. I'm leaving walker.py asis for now though!
+    # see 'arghandler.py'. I'm leaving walker.py asis for now though!
 
     name_ = "dummy walker"
     verbosity = recurse = 0

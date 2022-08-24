@@ -6,7 +6,7 @@ to output port... and ad hoc variations on that theme!
 import sys, os, time, random, signal
 from terpsichore import *
 import mido
-from large import Large
+from arghandler import ArgHandler
 
 
 def program_pedals():
@@ -49,7 +49,7 @@ returns '' => left-pedal or '\n' => right pedal or None => timeout.
     print(f"pedal returns <{answer}>")
     return answer
 
-class CelloFingers(Large):
+class CelloFingers(ArgHandler):
     open_strings = 'D'
     user_secs = 3.0
     midi_port = -1
@@ -78,10 +78,10 @@ class CelloFingers(Large):
                   "  means interpret the next argument as the scaling to apply (in order to get nice but not too wide border).\n"
                   "this may be entered as e.g. 0.8 or equivalently 80%. The default is to apply no scaling\n"
                   )
-        return Large.process_keyword_arg(self, a)
+        return ArgHandler.process_keyword_arg(self, a)
 
     def process_args(self):
-        Large.process_args(self)
+        ArgHandler.process_args(self)
         print(f"remaining args: {sys.argv}")
 
     def main(self):

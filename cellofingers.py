@@ -50,13 +50,19 @@ returns '' => left-pedal or '\n' => right pedal or None => timeout.
     return answer
 
 class CelloFingers(ArgHandler):
-    open_strings = 'D'
+    strings = None
     user_secs = 3.0
     midi_port = -1
+    instrument = Instrument.cello
+    instrument_name = 'Cello'
 
     def process_keyword_arg(self, a):
-        if a in ('-S', '--open-string'):
-            self.open_strings = sys.argv.pop(0)
+        if a in ('-I', '--instrument'):
+            self.instrument_name = self.next_arg()
+            self.instrument = instrument_by_name[self.instrument_name]
+            return a
+        if a in ('-S', '--strings'):
+            self.strings = sys.argv.pop(0)
             return a
         if a in ('-U', '--user-time'):
             self.user_secs = self.next_float_arg()
@@ -65,44 +71,51 @@ class CelloFingers(ArgHandler):
             self.midi_port= self.next_arg()  # more processing of this later!
             return a
         if a in ('-h', '--help'):
-            print("utility to reduce letter-size PDF's to A4 size.\n"
-                 "syntax:  pdf_walker.py [options] [paths]\n"
-                  "special options for pdf_walker.py are: (shown quoted but must be entered unquoted!)\n"
-                  "'--prefix'   or equivalently '-p'\n"
-                  "  means interpret the next argument as the prefix to apply when deriving thte output filename.\n"
-                  "'--rotate'   or equivalently '-r'\n"
-                  "  means interpret the next argument as an angle to rotate in degrees (e.g. 180 for upside-down).\n"
-                  "'--prefix'   or equivalently '-p'\n"
-                  "  means interpret the next argument as the prefix to apply when deriving thte output filename.\n"
-                  "'--scale'   or equivalently '-s'\n"
-                  "  means interpret the next argument as the scaling to apply (in order to get nice but not too wide border).\n"
-                  "this may be entered as e.g. 0.8 or equivalently 80%. The default is to apply no scaling\n"
+            print("utility/game to train recognizing of musical tones of instrument .\n"
+                  " and playing them on the instrument\n"
+                 "syntax:  cellofingers.py [options]\n"
+                  "special options for cellofingers.py are: (shown quoted but can and should be entered unquoted in most cases!)\n"
+                  "'--strings'     or equivalently '-S'\n"
+                  "\tmeans interpret the next argument as letters referring to strings of the instrument, e.g. 'A' or 'AD'.\n"
+                  "\n"
+                  "'--instrument'     or equivalently '-I'\n"
+                  "\tmeans interpret the next argument as an instrument name, e.g. 'cello' or 'string bass'.\n"
+                  "\n"
+                  "'--user-time'   or equivalently '-U'\n"
+                  "\tmeans interpret the next argument as how many seconds to wait before revealing the 'answer'.\n"
+                  "\n"
+                  "'--midi-port'   or equivalently '-P'\n"
+                  "\tmeans interpret the next argument as identifying which midi port to use. This may be\n"
+                  "\tentered as a a string (this will tend to contain one of more space characters so it's handy to put singe quotes\n"
+                  "\taround the name. Alternatively, a numerical index within the list of available mdidi iports may be entered.\n"
+                  "\tThe default (-1) takes the last defined port which tends to relate to a midi synthesizedre if one has been congigured."
+                  "\n"
                   )
         return ArgHandler.process_keyword_arg(self, a)
 
     def process_args(self):
         ArgHandler.process_args(self)
-        print(f"remaining args: {sys.argv}")
 
     def main(self):
         self.process_all_keyword_args()
         self.no_more_positional_args()
+
         program_pedals()
 
-        instrument = Instrument.Cello
         try:
             self.midi_port = mido.get_output_names()[int(self.midi_port)]
         except ValueError:
             pass
-        print(f"running '{self.program_name}' assuming fingers on '{self.open_strings}' string;using MIDI port '{self.midi_port}'")
+        print(f"running '{self.program_name}' assuming fingers on '{self.strings}' string;using MIDI port '{self.midi_port}'")
 
-        self.string_notes = [instrument.get_string_note_from_letter(letter) for letter in self.open_strings]
+        self.string_notes = self.instrument.get_string_notes(letters=self.strings)
 
         fingers_and_their_pitch_offsets = list(enumerate([0, 2, 3, 4, 5]))  # beginners only!
 
         with mido.open_output(self.midi_port, autoreset=True) as port:
-            select_instrument_sound = mido.Message('program_change', program=instrument.midi_program, time=0)
-            print(f"selecting MIDI program {instrument.midi_program}")
+            print(f"changing program to {self.instrument.midi_program} for instrument '{self.instrument}'")
+            select_instrument_sound = mido.Message('program_change', program=self.instrument.midi_program, time=0)
+            print(f"selecting MIDI program {self.instrument.midi_program}")
             port.send(select_instrument_sound)
             prev_pitch = None
             while 1:

@@ -6,7 +6,7 @@ import sys, os, shlex, glob
 class ArgHandler:
     # N.B. This code started life as part of 'walker.py'.
 
-    name_ = "dummy walker"
+    name_ = "base argument handler class"
     verbosity = 0
     prefix_ = ''   # maybe None better but this lazier
     myExts = ()
@@ -66,7 +66,7 @@ class ArgHandler:
         # unrecognized args follow through to....
         print(
                 "\n"
-                "all utilities based around the 'Walker' class (also) accept the arguments (don't enter the quotes!):\n"
+                "all utilities based around the 'ArgHanlder' class (also) accept the arguments (don't enter the quotes!):\n"
                 "'--help' or equivalently '-h'\n"
                 "\trequests help information about this command."
                 "\n"

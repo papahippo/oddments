@@ -53,6 +53,7 @@ class CelloFingers(ArgHandler):
     strings = None
     user_secs = 3.0
     midi_port = -1
+    reminder = False
     instrument = Instrument.cello
     instrument_name = 'Cello'
 
@@ -67,8 +68,11 @@ class CelloFingers(ArgHandler):
         if a in ('-U', '--user-time'):
             self.user_secs = self.next_float_arg()
             return a
-        if a in ('-P', '--midi-port'):
+        if a in ('-M', '--midi-port'):
             self.midi_port= self.next_arg()  # more processing of this later!
+            return a
+        if a in ('-R', '--reminder'):
+            self.reminder = True
             return a
         if a in ('-h', '--help'):
             print("utility/game to train recognizing of musical tones of instrument .\n"
@@ -89,6 +93,9 @@ class CelloFingers(ArgHandler):
                   "\tentered as a a string (this will tend to contain one of more space characters so it's handy to put singe quotes\n"
                   "\taround the name. Alternatively, a numerical index within the list of available mdidi iports may be entered.\n"
                   "\tThe default (-1) takes the last defined port which tends to relate to a midi synthesizedre if one has been congigured."
+                  "\n"
+                  "'--reminder' or equivalently '-R'\n"
+                  "\tmeans: before each note, play the previous note as a 'reminder'.\n"
                   "\n"
                   )
         return ArgHandler.process_keyword_arg(self, a)
@@ -124,7 +131,7 @@ class CelloFingers(ArgHandler):
                 pitch = the_string.GetPitch() + pitch_offset
                 note = notes_by_Pitch[pitch][0]  # 0 => favour sharps over flats
                 while 1:
-                    if prev_pitch:
+                    if prev_pitch and self.reminder:
                         port.send(mido.Message('note_on', note=prev_pitch))
                         time.sleep(1.0)
                         port.send(mido.Message('note_off', note=prev_pitch))

@@ -13,9 +13,9 @@ class JpegsToPDF(Walker):
     def goes_to_same_PDF(self, item_):
         return False  # STUB implementation for initial test with single-page docs
 
-    def cleanup(self):
+    def cleanup(self, root_):
         if self.pendingJpegFileNames:
-            pdfFileName = f'{self.root_}/{self.stem_}.pdf'
+            pdfFileName = f'{root_}/{self.stem_}.pdf'
             print("writing %s" % pdfFileName)
             with open(pdfFileName, 'wb') as out:
                 out.write(img2pdf.convert([jpegFile for jpegFile in self.pendingJpegFileNames]))
@@ -25,7 +25,7 @@ class JpegsToPDF(Walker):
         if is_dir or not Walker.handle_item(self, root_, item_, is_dir):
             return
         if not self.goes_to_same_PDF(item_):
-            self.cleanup()
+            self.cleanup(root_)
         self.pendingJpegFileNames.append(self.full_source_name)
         return True
 

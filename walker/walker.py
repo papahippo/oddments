@@ -11,6 +11,7 @@ class Walker:
     verbosity = recurse = 0
     prefix_ = ''   # maybe None better but this lazier
     myExts = ()
+    newExt = ''
 
     def vprint(self, this_verbosity, *pp, **kw):
         if self.verbosity >= this_verbosity:
@@ -34,7 +35,7 @@ class Walker:
         self.full_source_name = os.path.join(root_, item_)
         self.vprint(2, f'full_source_name = {self.full_source_name}')
         self.shell_source_name = shlex.quote(self.full_source_name)
-        self.full_dest_name =  os.path.join(parentage, root_, self.prefix_ + child)
+        self.full_dest_name =  os.path.join(parentage, root_ , self.prefix_ + self.stem_ + (self.newExt or self.ext_))
         self.vprint(2, f'full_dest_name = {self.full_dest_name}')
         self.shell_dest_name = shlex.quote(self.full_dest_name)
         self.vprint(2, f'shell_dest_name = {self.shell_dest_name}')

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+"""
+This  is a quick fix for a rush job to split some A3 scans that are different from earlier ones.
+"""
 import copy, os
 from PyPDF2 import PdfFileWriter, PdfFileReader
 
@@ -21,13 +24,13 @@ class A5A5toA4L(Walker):
             (x1, y1) = p.mediaBox.upperRight
             print ((x0, y0), (x1, y1))
             p.mediaBox.lowerLeft = (x0, y0)
-            p.mediaBox.lowerRight = (x1/2, y0)
-            p.mediaBox.upperLeft = (x0, y1)
-            p.mediaBox.upperRight = (x1/2, y1)
+            p.mediaBox.lowerRight = (x1, y0)
+            p.mediaBox.upperLeft = (x0, y1/2)
+            p.mediaBox.upperRight = (x1, y1/2)
             output.addPage(p)
-            q.mediaBox.lowerLeft = (x1/2, y0)
-            q.mediaBox.lowerRight = (x1, y0)
-            q.mediaBox.upperLeft = (x1/2, y1)
+            q.mediaBox.lowerLeft = (x0, y1/2)
+            q.mediaBox.lowerRight = (x1, y1/2)
+            q.mediaBox.upperLeft = (x0, y1)
             q.mediaBox.upperRight = (x1, y1)
             output.addPage(q)
         output.write(open(self.full_dest_name, 'wb'))

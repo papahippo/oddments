@@ -5,8 +5,10 @@ It now uses the 'Walker' class; see 'walker.py' in this diretory.
 I scanned some music which was in "letter" format with little or no margins. With careful placement of the orignal
 on the scanner I ensured no part of the image was lost... but I need to distribute the music in A4 with margins
  (for filing in ring-binders).
+typically, we create subprocesses to run commands like:
+pdfjam --scale 0.95 --a4paper --latex /usr/bin/lualatex Singin-Sax-Partituur.pdf
 """
-import sys,os
+import sys,subprocess
 from walker import Walker
 
 
@@ -15,17 +17,20 @@ class JamToA4(Walker):
     prefix_ = 'a4-'
     myExts = ('.pdf',)
 
-    sExtra = ''
+    argsExtra = ()
 
     def process_keyword_arg(self, a):
         if a in ('-p', '--prefix'):
             prefix = sys.argv.pop(0)
             return a
         if a in ('-r', '--rotated'):
-            self.sExtra += f'--angle {self.next_arg("180")}'
+            self.argsExtra += ('--angle', self.next_arg("180"))
             return a
         if a in ('-s', '--scale'):
-            self.sExtra += f'--scale {self.next_float_arg("90%")}'
+            self.argsExtra += ('--scale', str(self.next_float_arg("90%")))
+            return a
+        if a in ('-o', '--offset'):
+            self.argsExtra += ('--offset', f"{self.next_arg('0mm')} {self.next_arg('0mm')}")
             return a
         if a in ('-h', '--help'):
             print("utility to reduce letter-size PDF's to A4 size.\n"
@@ -40,6 +45,9 @@ class JamToA4(Walker):
                   "'--scale'   or equivalently '-s'\n"
                   "  means interpret the next argument as the scaling to apply (in order to get nice but not too wide border).\n"
                   "this may be entered as e.g. 0.8 or equivalently 80%. The default is to apply no scaling\n"
+                  "'--offset'   or equivalently '-o'\n"
+                  "  means interpret the next two arguments as the x and y offset to apply.\n"
+                  "this may be entered as e.g. ... 10mm 0mm ... (I'm not sure what other units are allowed.\n"
                   )
         return Walker.process_keyword_arg(self, a)
 
@@ -48,9 +56,11 @@ class JamToA4(Walker):
         if is_dir or not Walker.handle_item(self, root_, item_, is_dir):
             return
 
-        cmd = f"pdfjam --outfile {self.shell_dest_name}  --paper a4paper {self.sExtra} {self.shell_source_name}"
-        self.vprint(1, f"converting thisfile with a one-liner: '{cmd}'")
-        os.system(cmd)
+        cmd_n_args = (("pdfjam", "--outfile", self.full_dest_name,  '--paper', '--a4paper')
+                                + ('--latex', '/usr/bin/lualatex')
+                                + self.argsExtra + (self.full_source_name,))
+        self.vprint(1, f"converting this file with command and args: {cmd_n_args}")
+        subprocess.run(cmd_n_args)
 
 if __name__ == '__main__':
     JamToA4().main()

@@ -18,8 +18,8 @@ class Walker:
             return print(*pp, **kw)
 
     def handle_item(self, root_, item_, is_dir):
-        # Sub-classes of Walker are not compelled to call this; but it can be convenient!
-        # Sub-clases which intend to operate on directories as such - not just their files in them -
+        # Subclasses of Walker are not compelled to call this; but it can be convenient!
+        # Subclasses which intend to operate on directories as such - not just their files in them -
         # should prvide their own ''handle_item.
         # if is_dir:
         #     return None
@@ -32,6 +32,8 @@ class Walker:
         if os.path.isabs(item_):
             root_ = ''
         self.vprint(2, self.name_, 'isdir=%u' % is_dir, root_, item_)
+# the use of 'shell_source_name'  and 'shell_dest_name' is being phased out in combination with the long overdue
+# migration awaay from the use of shell=True in subporcess calls.
         self.full_source_name = os.path.join(root_, item_)
         self.vprint(2, f'full_source_name = {self.full_source_name}')
         self.shell_source_name = shlex.quote(self.full_source_name)

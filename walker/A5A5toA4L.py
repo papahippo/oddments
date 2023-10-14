@@ -43,8 +43,8 @@ class A5A5toA4L(Walker):
         for spage in src:  # for each page in input
             xref = 0  # force initial page copy to output
             r = spage.rect  # input page rectangle
-            d = fitz.Rect(spage.CropBoxPosition,  # CropBox displacement if not
-                          spage.CropBoxPosition)  # starting at (0, 0)
+            d = fitz.Rect(spage.cropbox_position,  # CropBox displacement if not
+                          spage.cropbox_position)  # starting at (0, 0)
             # --------------------------------------------------------------------------
             # example: cut input page into 2 x 2 parts
             # --------------------------------------------------------------------------

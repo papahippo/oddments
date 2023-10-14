@@ -14,7 +14,7 @@ class A3toA4P(Walker):
     def handle_item(self, root_, item_, is_dir):
         if is_dir or not Walker.handle_item(self, root_, item_, is_dir):
             return
-        call(f'pdfposter {self.shell_source_name} {self.shell_dest_name} -m a4 -p 2x1a4', shell=True)
+        call(('pdfposter', self.full_source_name, self.full_dest_name, '-m',  'a4', '-p', '2x1a4'))
         return True
 
 

@@ -9,6 +9,10 @@ print A3, B4
 #    but as instances of a 'note' class.
 """
 import numpy, math
+from collections import OrderedDict
+
+class MusicNoteError(BaseException):
+    pass
 
 all_Keys = {}
 note_letters = ('C', None, 'D', None, 'E', 'F', None, 'G', None, 'A', None, 'B')
@@ -226,38 +230,58 @@ class _Instrument(musicItem):
         self.clef = clef
         self.midi_program = midi_program
 
+        self.string_notes_by_letter = OrderedDict()
+        if not strings:
+            return
+        for s in strings:
+            string_letter = s.real_name[0]
+            if string_letter in self.string_notes_by_letter:
+                string_letter = string_letter.lower()
+            self.string_notes_by_letter[string_letter] = s
+
     def __repr__(self):
         s = self.strings and "(%s strings)" % len(self.strings) or ""
         return "instrument:'%s'%s" % (self.real_name, s)
 
+    def get_string_notes(self, letters=None):
+        sns = []
+        for letter, note in self.string_notes_by_letter.items():
+            if (not letters) or letter in letters:
+                sns.append(note)
+        return sns
+        # except ValueError:
+        #    raise MusicNoteError(f"A {self} with a '{letter}' string?  I don't think so!")
 
 class Instrument(musicGroup):
     pass
 
+instrument_by_name = {}
 
 def add_Instrument(real_name='ANInstrumment', python_name=None,
                    clef=Clef.Treble, strings=None, midi_program=0):
     if not python_name:
         python_name = real_name.replace(' ', '_').replace('#', 'i')
-    setattr(Instrument, python_name, _Instrument(real_name=real_name, clef=clef,
-                                                 strings=strings, midi_program=midi_program))
-
+    instrument = _Instrument(real_name=real_name, clef=clef,
+                                                 strings=strings, midi_program=midi_program)
+    setattr(Instrument, python_name, instrument)
+    instrument_by_name[real_name] = instrument
 
 def isInstrument(entity):
     return isinstance(entity, _Instrument)
 
 
-add_Instrument('Guitar', strings=(Note.E2, Note.A2, Note.D3, Note.G3, Note.B3, Note.E4))
-add_Instrument('Violin', strings=(Note.G3, Note.D4, Note.A4, Note.E5))
-add_Instrument('Viola', strings=(Note.C3, Note.G3, Note.D4, Note.A4))
-add_Instrument('Cello', strings=(Note.C2, Note.G2, Note.D3, Note.A3), midi_program=42)  # 43)
+add_Instrument('guitar', strings=(Note.E2, Note.A2, Note.D3, Note.G3, Note.B3, Note.E4))
+add_Instrument('violin', strings=(Note.G3, Note.D4, Note.A4, Note.E5))
+add_Instrument('viola', strings=(Note.C3, Note.G3, Note.D4, Note.A4))
+add_Instrument('cello', clef=Clef.Bass, strings=(Note.C2, Note.G2, Note.D3, Note.A3), midi_program=42)  # 43)
+add_Instrument('string bass', clef=Clef.Bass, strings=(Note.E1, Note.A1, Note.D2, Note.G2), midi_program=42)  # 43)
 
 # following two 'instruments' are dubious but handy at this stage of development:
 
 add_Instrument('Treble Voice')
 add_Instrument('Bass Voice', clef=Clef.Bass)
 
-current_instrument = Instrument.Guitar
+current_instrument = Instrument.guitar
 
 
 # quick hack for use by fortuna440

@@ -2,7 +2,7 @@
 # N.B. This is flawed. Thre recently added rotation stuff seems to work but the margin stuff doesn't!
 
 import sys, os
-from pypdf import PdfWriter, PdfReader, PageObject
+from pdfrw import PdfReader, PdfWriter, IndirectPdfDict
 from walker import Walker
 
 XSANE_STANDARD_TITLE = "XSane scanned image"
@@ -21,7 +21,7 @@ class Pdf_meta(Walker):
         if a in ('-h', '--help'):
             print(f"utility to apply or adjust margins of (usually A4) pages within a PDF\n"
                 "syntax:  pdf_neat.py [options] [paths]\n"
-                  "special options for pdf_meta.py are (shown quoted but must be entered unquoted!):\n"
+                  "special options for pdf_writer.Info.py are (shown quoted but must be entered unquoted!):\n"
                   "'--fix-xsane   or equivalently '-X'\n"
                   "'remove the tile '{XSANE_STANDARD_TITLE}' if present\n"
                   )
@@ -33,24 +33,21 @@ class Pdf_meta(Walker):
         self.vprint(1, "item..", item_)
         reader = PdfReader(open(self.full_source_name, 'rb'))
         self.vprint(2, "page count", len(reader.pages))
-        writer = PdfWriter()
-        meta = reader.metadata
-        if meta is None:
+        writer = reader  # tryout! PdfWriter()
+        # writer.addpages(reader.pages)
+        writer.Info = reader.Info
+        if writer.Info is None:
             self.vprint(1, "no metadata!")
-            new_meta = {}
+            writer.Info = IndirectPdfDict()
         else:
-            self.vprint(2, meta.author)
-            self.vprint(2, meta.creator)
-            self.vprint(2, meta.producer)
-            self.vprint(2, meta.subject)
-            self.vprint(1, meta.title)
-            self.vprint(1, meta.creation_date)
-            new_meta = meta.copy()
-        new_meta['/Title']= "aha!"
-        self.vprint(2, new_meta)
-        writer.add_metadata(new_meta)
-        for page in reader.pages:
-                writer.add_page(page)
+            self.vprint(2, writer.Info.Creator)
+            self.vprint(2, writer.Info.Producer)
+            self.vprint(2, writer.Info.Subject)
+            self.vprint(1, writer.Info.Title)
+            self.vprint(1, writer.Info.CreationDate)
+            writer.Info = reader.Info
+        writer.Info.Title= "aha!"
+        self.vprint(2, writer.Info)
 
         # writer.write(open(self.full_dest_name, 'wb'))
         return True

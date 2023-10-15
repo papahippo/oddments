@@ -9,7 +9,7 @@ XSANE_STANDARD_TITLE = "XSane scanned image"
 
 class Pdf_meta(Walker):
 
-    name_ =  "apply/adjust margins of PDF containing A4 scanned pages."
+    name_ =  "Fix anomalies - or other inconvenient data! - in PDF metadata."
     myExts = ('.pdf',)
     prefix_ = 'meta-'
     fix = False
@@ -21,7 +21,7 @@ class Pdf_meta(Walker):
         if a in ('-h', '--help'):
             print(f"utility to apply or adjust margins of (usually A4) pages within a PDF\n"
                 "syntax:  pdf_neat.py [options] [paths]\n"
-                  "special options for pdf_writer.Info.py are (shown quoted but must be entered unquoted!):\n"
+                  "special options for pdf_reader.Info.py are (shown quoted but must be entered unquoted!):\n"
                   "'--fix-xsane   or equivalently '-X'\n"
                   "'remove the tile '{XSANE_STANDARD_TITLE}' if present\n"
                   )
@@ -33,11 +33,11 @@ class Pdf_meta(Walker):
         self.vprint(1, "item..", item_)
         reader = PdfReader(open(self.full_source_name, 'rb'))
         self.vprint(2, "page count", len(reader.pages))
-        writer = reader  # tryout! PdfWriter()
-        # writer.addpages(reader.pages)
+        writer = PdfWriter()
+        writer.addpages(reader.pages)
         writer.Info = reader.Info
         if writer.Info is None:
-            self.vprint(1, "no metadata!")
+            self.vprint(1, f"no metadata in '{item_}'!")
             writer.Info = IndirectPdfDict()
         else:
             self.vprint(2, writer.Info.Creator)
@@ -45,11 +45,9 @@ class Pdf_meta(Walker):
             self.vprint(2, writer.Info.Subject)
             self.vprint(1, writer.Info.Title)
             self.vprint(1, writer.Info.CreationDate)
-            writer.Info = reader.Info
         writer.Info.Title= "aha!"
         self.vprint(2, writer.Info)
-
-        # writer.write(open(self.full_dest_name, 'wb'))
+        writer.write(open(self.full_dest_name, 'wb'))
         return True
 
 

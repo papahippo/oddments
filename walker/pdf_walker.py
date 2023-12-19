@@ -82,7 +82,7 @@ class PdfWalker(Walker):
                 # anyway, they are easily corrected:
                 #
                 subprocess.run(('pdf2ps', self.full_source_name, self.ps_filename))
-                subprocess.run(('ps2pdfs', self.ps_filename, self.full_source_name))
+                subprocess.run(('ps2pdf', self.ps_filename, self.full_source_name))
                 return True
             if field['color']!='gray' or int(field['bpc'])!=1:
                 self.vprint(0, "%s is %u bit(s) %s (not 1 bit gray)" % (self.shell_source_name, int(field['bpc']), field['color']))

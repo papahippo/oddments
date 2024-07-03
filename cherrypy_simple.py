@@ -13,8 +13,8 @@ if __name__ == '__main__':
     server_config={
         'server.socket_host': '192.168.2.39',  # 127.0.0.1',
         'server.socket_port': 4400,
-        'server.ssl_module': 'builtin',
-        #'server.ssl_module':'pyopenssl',
+        #'server.ssl_module': 'builtin',
+        'server.ssl_module':'pyopenssl',
         'server.ssl_certificate':'/etc/letsencrypt/live/larry.myerscough.nl/fullchain.pem',
         'server.ssl_private_key':'/etc/letsencrypt/live/larry.myerscough.nl/privkey.pem',
                                  'tools.sessions.locking': 'early',

@@ -295,5 +295,5 @@ def best_note_name_for_pitch(i):
 
 if __name__ == '__main__':
     # print (Note.A3, Note.B4, '\n')
-    print(*[notes_by_Pitch[i][0] for i in range(56, 62)], sep='\n')
+    print(*[notes_by_Pitch[i] for i in range(56, 62)], sep='\n')
     # print ([best_note_name_for_pitch(i) for i in range(50,70)])

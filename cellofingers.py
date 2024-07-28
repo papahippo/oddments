@@ -11,10 +11,10 @@ from arghandler import ArgHandler
 
 def program_pedals():
     # unbuffered reading of keyboard input in python is ... well not as straighforward as
-    # I had hoped. So, I program my twin-pedal footswitch to generate (left) control-C =>KeyboardInterrupt
-    # and (right) ENTER, both of which can be detected without too much jiggery-pokery.
+    # I had hoped. So, I program my twin-pedal footswitch to generate (right) control-C =>KeyboardInterrupt
+    # and (left) ENTER, both of which can be detected without too much jiggery-pokery.
     #
-    return os.system("sudo footswitch -1 -m ctrl -k c -2 -k enter")
+    return os.system("sudo footswitch -1 -k enter -2 -m ctrl -k c")
 
 
 class TimeoutException(BaseException):
@@ -27,7 +27,7 @@ def handler(signum, frame):
 signal.signal(signal.SIGALRM, handler)
 
 
-def back_pedal(prompt='', timeout=None, obj=sys.stdin):
+def guess_note(note_names, prompt='', timeout=None, obj=sys.stdin):
     """
 Wait 'timeout' seconds (None => indefinitely) for action from footswitch.
 returns True => left-pedal or False => right pedal or None => timeout.
@@ -37,14 +37,11 @@ returns True => left-pedal or False => right pedal or None => timeout.
     if timeout:
         signal.alarm(timeout)
     try:
-        c = obj.read(1)
-        answer = False
-    except TimeoutException:
-        # print("TimeoutException")
+        s = obj.readline().strip()
+        # removed this flexibility:  answer = s in (note_name, note_name[-1])  # allow omission of octave number
+        answer = s in note_names
+    except (TimeoutException, KeyboardInterrupt):
         answer = None
-    except KeyboardInterrupt:
-         # print("KeyboardInterrupt")
-        answer = True
 
     if timeout:
         signal.alarm(0)
@@ -113,8 +110,8 @@ class CelloFingers(ArgHandler):
                   )
         return ArgHandler.process_keyword_arg(self, a)
 
-    def process_args(self):
-        ArgHandler.process_args(self)
+#?    def process_args(self):
+#?        ArgHandler.process_args(self)
 
     def main(self):
         self.process_all_keyword_args()
@@ -151,12 +148,13 @@ class CelloFingers(ArgHandler):
                     port.send(mido.Message('note_on', note=pitch))
                     time.sleep(self.play_time)
                     port.send(mido.Message('note_off', note=pitch))
-                    if back_pedal(prompt="which note? left= play it again, right or just wait = skip this note", timeout=self.before_secs):
-                        continue  # True (ctl_C) means "don't tell me yet, repeat the same note"
-                    print(f"\n{note}\n\nstring {the_string.real_name}, finger: {finger}  {note}",
-                      f"interval={pitch-prev_pitch if prev_pitch else ''}")
-                    if not back_pedal(prompt="left= let me try again, right or just wait = proceed to next note", timeout=self.after_secs):
-                        break  # move on to produce another note
+                    if guess_note([note.real_name for note in notes_by_Pitch[pitch]],
+                                  prompt="which note? left= play it again, right or just wait = skip this note",
+                                  timeout=self.before_secs) is not False:
+                        break # True (=> guessed right) or None (=> 'give up'[ctl-C] or 'time out') so show anwer and move on
+                    # False (wrongn text - or ENTER by pedal means "don't tell me yet, repeat the same note"
+                print(f"\n{note}   string {the_string.real_name}, finger: {finger}",
+                  f"interval={pitch-prev_pitch if prev_pitch else ''}")
                 prev_pitch = pitch
         print("That's all folks!!")
 

@@ -49,7 +49,7 @@ class ArgHandler:
             real /= 100.0
         return real
 
-    def next_int_arg(self, default):
+    def next_int_arg(self, default=0):
         v = self.next_arg(default)
         if v is None:
             raise ValueError(f"missing integer value after keyword '{self.latest_kw_arg}'")

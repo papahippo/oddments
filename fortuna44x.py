@@ -5,7 +5,8 @@ import time
 
 import numpy
 import pygame
-import pyaudio
+import sounddevice as sd
+import soundfile as sf
 try:
     import analyse
 except:
@@ -48,14 +49,19 @@ class Fortuna440(object):
         except IndexError:
             self.inputDeviceIndex = 4
 
-        # Initialize PyAudio
-        self.pyaud = pyaudio.PyAudio()
-
         self.stream = None
 
         self.tt = numpy.array([])
         self.pp = numpy.array([],  dtype=float)
             
+
+    def create_stream(self, device=None):
+        if self.stream is not None:
+            self.stream.close()
+        self.stream = sd.InputStream(
+            device=device, channels=1)
+        self.stream.start()
+
 
     def pitch2y(self, pitch):
         return (self.basePitch-pitch)*self.zoom
@@ -106,13 +112,7 @@ class Fortuna440(object):
             self.latest_volume = 0
             self.latest_pitch = -1  # delieratly impossible
             try:
-                self.stream = self.pyaud.open(
-                    format = pyaudio.paInt16,
-                    channels = 1,
-                    rate = 44100,
-                    input_device_index = self.inputDeviceIndex,
-                    frames_per_buffer=4096,
-                    input = True)
+                self.create_stream(device=None)
                 self.latest_note = "Valid input device but no note yet"
             except OSError:
                 self.latest_note = "This input device is not available on this system"

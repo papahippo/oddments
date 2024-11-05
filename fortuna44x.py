@@ -4,6 +4,7 @@ import sys,  os
 import time
 
 import numpy
+import numpy as np
 import pygame
 import sounddevice as sd
 import soundfile as sf
@@ -28,7 +29,7 @@ class Fortuna440(object):
     x9_trace = width - (pianoKeyDepth+horizLength+26)
     state = 0
     useFFT = analyse is None
-    volumeThreshold  = 10
+    volumeThreshold  = 2
     
     def __init__(self):
         pygame.init()
@@ -59,7 +60,7 @@ class Fortuna440(object):
         if self.stream is not None:
             self.stream.close()
         self.stream = sd.InputStream(
-            device=device, channels=1)
+            device=device, dtype=np.int16, channels=1)
         self.stream.start()
 
 
@@ -121,17 +122,14 @@ class Fortuna440(object):
 
             self.screen = pygame.display.set_mode(self.screen_size)
         if self.stream:
-            try:
-                # Read raw microphone data
-                rawSamples = self.stream.read(self.sampleSize)
-            except:
-                print ("warning: dropped frame?")
-                return
-            # Convert raw data to NumPy array
-            samples = numpy.fromstring(rawSamples, dtype=numpy.int16)
+            rawSamples, overflow = self.stream.read(self.sampleSize)
+            if overflow:
+                print ("warning: overflow while recording")
+            # Convert raw data to 1-D NumPy array
+            samples = numpy.ravel(rawSamples)  #  , dtype=numpy.int16)
             # Show the volume and pitch
             if self.useFFT:
-                avgNote, volume = default_voice.DeriveNote(samples)
+                avgNote, volume = default_voice.DeriveNote(rawSamples)  # samples)
                 pitch = avgNote and avgNote.GetPitch()
             else:
                 pitch = analyse.musical_detect_pitch(samples, samplerate=self.sampleRate)

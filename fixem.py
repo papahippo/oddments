@@ -6,16 +6,18 @@ from PIL import Image
 import sys
 
 prog = sys.argv.pop(0)
-thresh = int(sys.argv.pop(0)) if sys.argv else 235 # default
-
-img = Image.open("./images/Vivaldi Zomer-1a.jpg")
-fn = lambda x : 255 if x > thresh else 0
-bw = img.convert('L').point(fn, mode='1')
-bw.save('./images/bw.pdf')
-img.save('./images/rgb.pdf')
-
-if 0:
-    im_new = im.rotate(-3.2, expand=True, fillcolor="white")
-    im_new.save('./images/im_new.png', 'png')
-    im_mono = im_new.convert('1')
-    im_mono.save('./images/im_mono.png', 'png')
+werk_naam = sys.argv.pop(0) if sys.argv else "Vivaldi Zomer"
+print(f"running '{prog}' to rescale sheet music pages and convert them to PDFs")
+for stem in (1, 2, 3, 4):
+    partij_naam = f"{werk_naam}-{stem}"
+    print(f"{stem=}")
+    bladzijde_dict = {}
+    for bladzijde_index in ('a', 'b'):
+        bladzijde_naam = f"{partij_naam}{bladzijde_index}.jpg"
+        print(f"\treading: {bladzijde_naam=}")
+        A4_PORTRAIT = (595, 842)
+        bladzijde_img = Image.open(bladzijde_naam).resize(A4_PORTRAIT) # , reducing_gap=1.0)  # , resample=Image.Resampling.BICUBIC)
+        bladzijde_dict[bladzijde_index] = bladzijde_img
+    PDF_naam = f"{partij_naam}.pdf"
+    print(f"\twriting: {PDF_naam=}")
+    bladzijde_dict['a'].save(PDF_naam, save_all=True, append_images=(bladzijde_dict['b'],))

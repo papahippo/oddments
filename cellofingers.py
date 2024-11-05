@@ -11,8 +11,8 @@ from arghandler import ArgHandler
 
 def program_pedals():
     # unbuffered reading of keyboard input in python is ... well not as straighforward as
-    # I had hoped. So, I program my twin-pedal footswitch to generate (left) control-D = end-of-file
-    # and (right) ENTER, both of which can be detected without too much jiggery-pokery.
+    # I had hoped. So, I program my twin-pedal footswitch to generate (right) control-C =>KeyboardInterrupt
+    # and (left) ENTER, both of which can be detected without too much jiggery-pokery.
     #
     return os.system("sudo footswitch -1 -k enter -2 -m ctrl -k c")
 
@@ -27,33 +27,34 @@ def handler(signum, frame):
 signal.signal(signal.SIGALRM, handler)
 
 
-def pedal(prompt='', timeout=None, obj=sys.stdin):
+def guess_note(note_names, prompt='', timeout=None, obj=sys.stdin):
     """
 Wait 'timeout' seconds (None => indefinitely) for action from footswitch.
-returns '' => left-pedal or '\n' => right pedal or None => timeout.
+returns True => left-pedal or False => right pedal or None => timeout.
     """
     if prompt:
         print(prompt)
     if timeout:
         signal.alarm(timeout)
     try:
-        c = obj.read(1)
-        answer = True
-    except TimeoutException:
+        s = obj.readline().strip()
+        # removed this flexibility:  answer = s in (note_name, note_name[-1])  # allow omission of octave number
+        answer = s in note_names
+    except (TimeoutException, KeyboardInterrupt):
         answer = None
-    except KeyboardInterrupt:
-        answer = False
 
     if timeout:
         signal.alarm(0)
-    print(f"pedal returns <{answer}>")
+    # print(f"pedal returns <{answer}>")
     return answer
 
 class CelloFingers(ArgHandler):
     strings = None
-    user_secs = 3.0
+    play_time = 2.0
+    before_secs = 0
+    after_secs = 0
     midi_port = -1
-    reminder = False
+    recap_time = False
     instrument = Instrument.cello
     instrument_name = 'Cello'
 
@@ -62,46 +63,55 @@ class CelloFingers(ArgHandler):
             self.instrument_name = self.next_arg()
             self.instrument = instrument_by_name[self.instrument_name]
             return a
-        if a in ('-S', '--strings'):
+        if a in ('-s', '--strings'):
             self.strings = sys.argv.pop(0)
             return a
-        if a in ('-U', '--user-time'):
-            self.user_secs = self.next_float_arg()
+        if a in ('-b', '--before-secs'):
+            self.before_secs = self.next_int_arg()
             return a
-        if a in ('-M', '--midi-port'):
+        if a in ('-a', '--after-secs'):
+            self.after_secs = self.next_int_arg()
+            return a
+        if a in ('-m', '--midi-port'):
             self.midi_port= self.next_arg()  # more processing of this later!
             return a
-        if a in ('-R', '--reminder'):
-            self.reminder = True
+        if a in ('-r', '--recap-time'):
+            self.recap_time = self.next_float_arg()
             return a
         if a in ('-h', '--help'):
             print("utility/game to train recognizing of musical tones of instrument .\n"
                   " and playing them on the instrument\n"
                  "syntax:  cellofingers.py [options]\n"
                   "special options for cellofingers.py are: (shown quoted but can and should be entered unquoted in most cases!)\n"
-                  "'--strings'     or equivalently '-S'\n"
+                  "'--strings'     or equivalently '-s'\n"
                   "\tmeans interpret the next argument as letters referring to strings of the instrument, e.g. 'A' or 'AD'.\n"
                   "\n"
-                  "'--instrument'     or equivalently '-I'\n"
+                  "'--instrument'     or equivalently '-i'\n"
                   "\tmeans interpret the next argument as an instrument name, e.g. 'cello' or 'string bass'.\n"
                   "\n"
-                  "'--user-time'   or equivalently '-U'\n"
-                  "\tmeans interpret the next argument as how many seconds to wait before revealing the 'answer'.\n"
+                  "'--play-time'   or equivalently '-p'\n"
+                  "\tmeans interpret the next argument as how many seconds (can be float) to sound the note for.\n"
                   "\n"
-                  "'--midi-port'   or equivalently '-P'\n"
+                  "'--before-secs'   or equivalently '-b'\n"
+                  "\tmeans interpret the next argument as how many seconds (integer) to wait before revealing the 'answer'.\n"
+                  "\n"
+                  "'--after-secs'   or equivalently '-a'\n"
+                  "\tmeans interpret the next argument as how many seconds (integer) to wait after revealing the 'answer'.\n"
+                  "\n"
+                  "'--midi-port'   or equivalently '-m'\n"
                   "\tmeans interpret the next argument as identifying which midi port to use. This may be\n"
                   "\tentered as a a string (this will tend to contain one of more space characters so it's handy to put singe quotes\n"
                   "\taround the name. Alternatively, a numerical index within the list of available mdidi iports may be entered.\n"
                   "\tThe default (-1) takes the last defined port which tends to relate to a midi synthesizedre if one has been congigured."
                   "\n"
-                  "'--reminder' or equivalently '-R'\n"
-                  "\tmeans: before each note, play the previous note as a 'reminder'.\n"
+                  "'--recap-time' or equivalently '-r'\n"
+                  "\tmeans: before each note, play the previous note for this long (float, seconds) as a 'recap'.\n"
                   "\n"
                   )
         return ArgHandler.process_keyword_arg(self, a)
 
-    def process_args(self):
-        ArgHandler.process_args(self)
+#?    def process_args(self):
+#?        ArgHandler.process_args(self)
 
     def main(self):
         self.process_all_keyword_args()
@@ -125,25 +135,26 @@ class CelloFingers(ArgHandler):
             print(f"selecting MIDI program {self.instrument.midi_program}")
             port.send(select_instrument_sound)
             prev_pitch = None
-            while 1:
+            while 1:  # until a deliberate minor deluge of ^C's busts our signal handling!
                 finger, pitch_offset = random.choice(fingers_and_their_pitch_offsets)
                 the_string = random.choice(self.string_notes)
                 pitch = the_string.GetPitch() + pitch_offset
                 note = notes_by_Pitch[pitch][0]  # 0 => favour sharps over flats
-                while 1:
-                    if prev_pitch and self.reminder:
+                while 1: # i.e. until we move on to the next note via 'break'
+                    if prev_pitch and self.recap_time:
                         port.send(mido.Message('note_on', note=prev_pitch))
-                        time.sleep(1.0)
+                        time.sleep(self.recap_time)
                         port.send(mido.Message('note_off', note=prev_pitch))
                     port.send(mido.Message('note_on', note=pitch))
-                    time.sleep(1.0)
+                    time.sleep(self.play_time)
                     port.send(mido.Message('note_off', note=pitch))
-                    if pedal(prompt="left=again, right or none = proceed", timeout=4):
-                        continue
-                    print(f"string {the_string.real_name}, finger: {finger}  {note}",
-                      f"interval={pitch-prev_pitch if prev_pitch else ''}")
-                    if not pedal(prompt="left=again, right or none = proceed", timeout=4):
-                        break
+                    if guess_note([note.real_name for note in notes_by_Pitch[pitch]],
+                                  prompt="which note? left= play it again, right or just wait = skip this note",
+                                  timeout=self.before_secs) is not False:
+                        break # True (=> guessed right) or None (=> 'give up'[ctl-C] or 'time out') so show anwer and move on
+                    # False (wrongn text - or ENTER by pedal means "don't tell me yet, repeat the same note"
+                print(f"\n{note}   string {the_string.real_name}, finger: {finger}",
+                  f"interval={pitch-prev_pitch if prev_pitch else ''}")
                 prev_pitch = pitch
         print("That's all folks!!")
 

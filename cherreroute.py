@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
 import cherrypy
 from cherrypy.process.plugins import DropPrivileges
 import sys, os, subprocess, shutil, tempfile

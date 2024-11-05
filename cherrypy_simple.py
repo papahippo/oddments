@@ -11,7 +11,7 @@ class RootServer:
 
 if __name__ == '__main__':
     server_config={
-        'server.socket_host': '192.168.2.39',  # 127.0.0.1',
+        'server.socket_host': '192.168.2.6',  # 127.0.0.1',
         'server.socket_port': 4400,
         #'server.ssl_module': 'builtin',
         'server.ssl_module':'pyopenssl',

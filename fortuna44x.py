@@ -142,7 +142,7 @@ class Fortuna440(object):
 
         if volume and (volume>= self.volumeThreshold):
             #if (pitch and (97>pitch>=10) and abs(pitch - self.latest_pitch) < 1.0
-            print(avgNote, volume)
+            #print(avgNote, volume)
             self.latest_volume = volume
             if pitch and (64 > pitch >= 10) and (abs(pitch - self.latest_pitch) < 1.0):
                 self.latest_note = avgNote

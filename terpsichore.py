@@ -196,21 +196,23 @@ class Voice(musicItem):
                          real_name=note_near.real_name + s_miss)
 
     # def DeriveNote(self, samples, sampleRate=44100, minFreq=10, maxFreq=2000, spread=3,
-    def DeriveNote(self, samples, sampleRate=44100, minFreq=10, maxFreq=400, spread=3,
+    # def DeriveNote(self, samples, sampleRate=44100, minFreq=10, maxFreq=400, spread=3,
+    def DeriveNote(self, samples, sampleRate=44100, minFreq=10, maxFreq=2000, spread=3,
                    transpose=False, concertPitch=440.0):
         nSamples = len(samples)
         fftAmplitudes = (abs(numpy.fft.fft(samples)) / nSamples)[minFreq:maxFreq]
         fftFrequencies = (sampleRate * numpy.arange(nSamples))[minFreq:maxFreq] / (nSamples * 1)
         indexMaxAmplitude = numpy.argmax(fftAmplitudes)
         fftAmplitudes = fftAmplitudes[indexMaxAmplitude - spread:indexMaxAmplitude + spread + 1]
+        if fftAmplitudes.any():
+            print(f"{numpy.argmax(fftAmplitudes)=}")
         fftFrequencies = fftFrequencies[indexMaxAmplitude - spread:indexMaxAmplitude + spread + 1]
         total = numpy.sum(fftAmplitudes)
-        print ("total", total)
         volume = math.log(total + 1, 2.0)
-        print ("total", total, "volume", volume)
+        # print ("total", total, "volume", volume)
         avgFrequency = numpy.sum(fftFrequencies * fftAmplitudes) / total
         absPitch = 69 + 12 * math.log((avgFrequency / concertPitch), 2.0)
-        print  ("absPitch =", absPitch)
+        # print  ("absPitch =", absPitch)
         try:
             avgNote = self.GetNote(absPitch, transpose=transpose)
         except:
